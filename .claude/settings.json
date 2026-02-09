@@ -4,7 +4,12 @@
       "Bash(git:*)",
       "Bash(gh:*)",
       "Bash(npm:*)",
-      "Bash(npx:*)"
+      "Bash(npx:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker ps:*)",
+      "Bash(npm run dev:*)",
+      "Bash(netstat:*)",
+      "Bash(curl:*)"
     ]
   }
 }
