@@ -26,7 +26,15 @@ type Project = {
   name: string
   clientId: string
   defaultBillCents: number
+  paymentTerms: string
 }
+
+const PAYMENT_TERMS_OPTIONS = [
+  "Due on receipt",
+  "Net 15",
+  "Net 30",
+  "Net 60",
+]
 
 type Client = {
   id: string
@@ -51,11 +59,13 @@ export function ProjectFormDialog({
   const [billRate, setBillRate] = useState(
     project ? (project.defaultBillCents / 100).toFixed(2) : ""
   )
+  const [paymentTerms, setPaymentTerms] = useState(project?.paymentTerms ?? "Net 30")
 
   function reset() {
     setName(project?.name ?? "")
     setClientId(project?.clientId ?? "")
     setBillRate(project ? (project.defaultBillCents / 100).toFixed(2) : "")
+    setPaymentTerms(project?.paymentTerms ?? "Net 30")
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -66,14 +76,15 @@ export function ProjectFormDialog({
 
     try {
       if (isEditing) {
-        await updateProject(project.id, { name, clientId, defaultBillCents })
+        await updateProject(project.id, { name, clientId, defaultBillCents, paymentTerms })
         toast.success("Project updated")
       } else {
-        await createProject({ name, clientId, defaultBillCents })
+        await createProject({ name, clientId, defaultBillCents, paymentTerms })
         toast.success("Project created")
         setName("")
         setClientId("")
         setBillRate("")
+        setPaymentTerms("Net 30")
       }
       onOpenChange(false)
     } catch (e) {
@@ -132,6 +143,21 @@ export function ProjectFormDialog({
               value={billRate}
               onChange={(e) => setBillRate(e.target.value)}
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="paymentTerms">Payment Terms</Label>
+            <Select value={paymentTerms} onValueChange={setPaymentTerms}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {PAYMENT_TERMS_OPTIONS.map((term) => (
+                  <SelectItem key={term} value={term}>
+                    {term}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>

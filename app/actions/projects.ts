@@ -42,6 +42,7 @@ export async function createProject(data: {
   name: string
   clientId: string
   defaultBillCents: number
+  paymentTerms: string
 }) {
   await requireAdmin()
 
@@ -54,6 +55,7 @@ export async function createProject(data: {
       name: data.name.trim(),
       clientId: data.clientId,
       defaultBillCents: data.defaultBillCents,
+      paymentTerms: data.paymentTerms,
     },
   })
 
@@ -66,6 +68,7 @@ export async function updateProject(
     name: string
     clientId: string
     defaultBillCents: number
+    paymentTerms: string
   }
 ) {
   await requireAdmin()
@@ -78,8 +81,9 @@ export async function updateProject(
     where: { id },
     data: {
       name: data.name.trim(),
-      clientId: data.clientId,
+      client: { connect: { id: data.clientId } },
       defaultBillCents: data.defaultBillCents,
+      paymentTerms: data.paymentTerms,
     },
   })
 

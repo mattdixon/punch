@@ -38,6 +38,7 @@ type Project = {
   name: string
   clientId: string
   defaultBillCents: number
+  paymentTerms: string
   archivedAt: Date | null
   client: { id: string; name: string }
   _count: { assignments: number }
@@ -115,6 +116,7 @@ export function ProjectTable({
               <TableHead>Project</TableHead>
               <TableHead>Client</TableHead>
               <TableHead className="text-right">Default Bill Rate</TableHead>
+              <TableHead>Payment Terms</TableHead>
               <TableHead className="text-right">Assigned</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="w-[50px]"></TableHead>
@@ -123,7 +125,7 @@ export function ProjectTable({
           <TableBody>
             {filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
                   {search ? "No projects match your search." : "No projects found."}
                 </TableCell>
               </TableRow>
@@ -139,6 +141,7 @@ export function ProjectTable({
                   <TableCell className="text-right font-mono">
                     {formatCurrency(project.defaultBillCents)}/hr
                   </TableCell>
+                  <TableCell>{project.paymentTerms}</TableCell>
                   <TableCell className="text-right">
                     {project._count.assignments}
                   </TableCell>

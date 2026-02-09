@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, Fragment } from "react"
 import {
   Table,
   TableBody,
@@ -151,7 +151,7 @@ export function TimesheetGrid({
           ) : (
             <>
               {grouped.map((group) => (
-                <>
+                <Fragment key={`group-${group.clientName}`}>
                   {grouped.length > 1 && (
                     <TableRow key={`client-${group.clientName}`}>
                       <TableCell
@@ -186,7 +186,7 @@ export function TimesheetGrid({
                       </TableCell>
                     </TableRow>
                   ))}
-                </>
+                </Fragment>
               ))}
               <TableRow className="border-t-2">
                 <TableCell className="font-bold sticky left-0 bg-background z-10">
