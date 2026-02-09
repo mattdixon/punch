@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { MoreHorizontal, Search, Plus } from "lucide-react"
+import Link from "next/link"
 import { formatCurrency } from "@/lib/utils"
 import { ProjectFormDialog } from "./project-form-dialog"
 import { archiveProject, restoreProject } from "@/app/actions/projects"
@@ -129,7 +130,11 @@ export function ProjectTable({
             ) : (
               filtered.map((project) => (
                 <TableRow key={project.id} className={project.archivedAt ? "opacity-60" : ""}>
-                  <TableCell className="font-medium">{project.name}</TableCell>
+                  <TableCell className="font-medium">
+                          <Link href={`/projects/${project.id}`} className="hover:underline">
+                            {project.name}
+                          </Link>
+                        </TableCell>
                   <TableCell>{project.client.name}</TableCell>
                   <TableCell className="text-right font-mono">
                     {formatCurrency(project.defaultBillCents)}/hr
