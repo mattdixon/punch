@@ -2,33 +2,68 @@
 
 Simple time tracking for agencies. Track hours, approve timecards, export for invoicing.
 
-## Quick Start
+## Prerequisites
+
+| Tool | Minimum Version | Notes |
+|------|----------------|-------|
+| [Node.js](https://nodejs.org/) | 20.9+ | LTS recommended |
+| [Docker Desktop](https://www.docker.com/products/docker-desktop/) | 4.x | For PostgreSQL |
+| npm | 10+ | Comes with Node.js |
+
+## First-Time Setup
 
 ```bash
-# Install dependencies
+# 1. Install dependencies
 npm install
 
-# Start database (Docker required)
-docker compose up -d
-
-# Setup environment
+# 2. Create your environment file
 cp .env.example .env
-# Edit .env with your settings
+```
 
-# Run database migrations
+Generate an auth secret and add it to `.env`:
+
+```bash
+# macOS/Linux
+openssl rand -base64 32
+
+# Windows (PowerShell)
+[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Max 256 }) -as [byte[]])
+```
+
+```bash
+# 3. Start the database and run migrations
+docker compose up -d
 npx prisma migrate dev
 
-# Seed demo data
+# 4. Seed demo data
 npx prisma db seed
-
-# Run dev server
-npm run dev
 ```
+
+## Running
+
+```bash
+npm run punch
+```
+
+This starts the Docker PostgreSQL container and the Next.js dev server in one command.
+
+The app will be available at **http://localhost:3000**.
 
 ## Demo Accounts
 
-- **Admin:** admin@punch.local / password123
-- **Member:** member@punch.local / password123
+| Account | Email | Password |
+|---------|-------|----------|
+| Admin | admin@punch.local | password123 |
+| Member | member@punch.local | password123 |
+
+## Other Commands
+
+```bash
+npm run dev       # Dev server only (database must already be running)
+npm run build     # Production build
+npm start         # Production server
+npx prisma studio # Browse database in the browser
+```
 
 ## Documentation
 

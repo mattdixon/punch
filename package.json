@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "punch": "docker compose up -d && next dev --turbopack",
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
