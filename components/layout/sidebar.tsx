@@ -4,6 +4,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import {
+  LayoutDashboard,
   Clock,
   CheckSquare,
   Users,
@@ -14,6 +15,12 @@ import {
 } from "lucide-react"
 
 const navItems = [
+  {
+    label: "Dashboard",
+    href: "/",
+    icon: LayoutDashboard,
+    roles: ["ADMIN", "MEMBER"],
+  },
   {
     label: "Timesheet",
     href: "/timesheet",
@@ -70,13 +77,16 @@ export function Sidebar({ user, companyName }: SidebarProps) {
   return (
     <aside className="flex w-64 flex-col border-r bg-background">
       <div className="flex h-14 items-center border-b px-6">
-        <Link href="/timesheet" className="text-xl font-bold">
+        <Link href="/" className="text-xl font-bold">
           {companyName || "Punch"}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">
         {visibleItems.map((item) => {
-          const isActive = pathname.startsWith(item.href)
+          const isActive =
+            item.href === "/"
+              ? pathname === "/"
+              : pathname.startsWith(item.href)
           return (
             <Link
               key={item.href}

@@ -129,17 +129,17 @@
 - [ ] Timestamp and approver recorded
 - [ ] User's timesheet shows "Approved" status
 
-### CARD-4: Reject Timecard (P1)
+### CARD-4: Reject Timecard (P1) ✅
 **As an** admin
 **I want to** reject a submitted timecard
 **So that** the user can make corrections
 
 **Acceptance Criteria:**
-- [ ] "Reject" or "Return" button on timecard detail
+- [x] "Reject" or "Return" button on timecard detail
 - [ ] Optional: add rejection reason
-- [ ] Status changes back to "Open"
-- [ ] User's timesheet becomes editable again
-- [ ] User notified (or just sees status change)
+- [x] Status changes back to "Open"
+- [x] User's timesheet becomes editable again
+- [x] User notified (or just sees status change)
 
 ### CARD-5: Mark Timecard as Invoiced (P0)
 **As an** admin
@@ -355,20 +355,20 @@
 
 ## Navigation & UI
 
-### UI-1: Dashboard/Home (P1)
+### UI-1: Dashboard/Home (P1) ✅
 **As a** user
 **I want to** see a summary when I log in
 **So that** I know what needs attention
 
 **Acceptance Criteria:**
 - Team member view:
-  - [ ] This week's total hours
-  - [ ] Timecard status
-  - [ ] Quick link to timesheet
+  - [x] This week's total hours
+  - [x] Timecard status
+  - [x] Quick link to timesheet
 - Admin view:
-  - [ ] Pending approvals count
-  - [ ] This week's total hours (all users)
-  - [ ] Quick links to approvals, export
+  - [x] Pending approvals count
+  - [x] This week's total hours (all users)
+  - [x] Quick links to approvals, export
 
 ### UI-2: Navigation (P0)
 **As a** user
@@ -487,11 +487,11 @@
 13. ~~PROJ-3, PROJ-4 (Edit/Archive projects)~~
 14. ~~USER-3, USER-4 (Edit/Archive users)~~
 
-### Phase 4: Settings & P1 Features
+### Phase 4: Settings & P1 Features (DONE)
 15. ~~SET-1 (Company settings with default payment terms, rates)~~
 16. ~~TIME-3 (Notes on time entries)~~
-17. CARD-4 (Reject timecard)
-18. UI-1 (Dashboard/home)
+17. ~~CARD-4 (Reject timecard)~~
+18. ~~UI-1 (Dashboard/home)~~
 
 ### Phase 5: Spikes & Integration
 19. SPIKE-1 (QuickBooks Online integration research)
