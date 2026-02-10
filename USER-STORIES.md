@@ -67,17 +67,17 @@
 - [ ] Cannot enter negative numbers
 - [ ] Maximum 24 hours per day validation
 
-### TIME-3: Add Notes to Time Entry (P1)
+### TIME-3: Add Notes to Time Entry (P1) ✅
 **As a** team member
 **I want to** add notes to a time entry
 **So that** I can explain what I worked on
 
 **Acceptance Criteria:**
-- [ ] Icon or indicator to add/view notes
-- [ ] Modal or popover to enter notes
-- [ ] Notes are optional
-- [ ] Visual indicator when entry has notes
-- [ ] Notes visible in export
+- [x] Icon or indicator to add/view notes
+- [x] Modal or popover to enter notes
+- [x] Notes are optional
+- [x] Visual indicator when entry has notes
+- [x] Notes visible in export
 
 ### TIME-4: View Locked Timesheet (P0)
 **As a** team member
@@ -488,8 +488,8 @@
 14. ~~USER-3, USER-4 (Edit/Archive users)~~
 
 ### Phase 4: Settings & P1 Features
-15. SET-1 (Company settings with default payment terms, rates)
-16. TIME-3 (Notes on time entries)
+15. ~~SET-1 (Company settings with default payment terms, rates)~~
+16. ~~TIME-3 (Notes on time entries)~~
 17. CARD-4 (Reject timecard)
 18. UI-1 (Dashboard/home)
 

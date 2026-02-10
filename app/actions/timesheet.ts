@@ -77,7 +77,7 @@ export async function saveTimeEntry(data: {
   projectId: string
   date: string
   hours: number
-  notes?: string
+  notes?: string | null
 }) {
   const session = await requireAuth()
   const userId = session.user.id

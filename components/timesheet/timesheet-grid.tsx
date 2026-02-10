@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { TimeCell } from "./time-cell"
+import { NotePopover } from "./note-popover"
 import { saveTimeEntry } from "@/app/actions/timesheet"
 import { toast } from "sonner"
 
@@ -52,6 +53,15 @@ export function TimesheetGrid({
     }
     return map
   })
+  const [localNotes, setLocalNotes] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {}
+    for (const e of entries) {
+      if (e.notes) {
+        map[`${e.projectId}:${e.date}`] = e.notes
+      }
+    }
+    return map
+  })
   const [saving, setSaving] = useState<Record<string, boolean>>({})
 
   const getHours = useCallback(
@@ -59,6 +69,13 @@ export function TimesheetGrid({
       return localEntries[`${projectId}:${date}`] ?? 0
     },
     [localEntries]
+  )
+
+  const getNotes = useCallback(
+    (projectId: string, date: string) => {
+      return localNotes[`${projectId}:${date}`] ?? null
+    },
+    [localNotes]
   )
 
   const handleSave = useCallback(
@@ -76,6 +93,14 @@ export function TimesheetGrid({
         }
         return next
       })
+
+      if (hours <= 0) {
+        setLocalNotes((prev) => {
+          const next = { ...prev }
+          delete next[key]
+          return next
+        })
+      }
 
       setSaving((prev) => ({ ...prev, [key]: true }))
       try {
@@ -97,6 +122,49 @@ export function TimesheetGrid({
       }
     },
     [localEntries]
+  )
+
+  const handleSaveNotes = useCallback(
+    async (projectId: string, date: string, notes: string | null) => {
+      const key = `${projectId}:${date}`
+      const prev = localNotes[key] ?? null
+      if (notes === prev) return
+
+      setLocalNotes((s) => {
+        const next = { ...s }
+        if (notes) {
+          next[key] = notes
+        } else {
+          delete next[key]
+        }
+        return next
+      })
+
+      const currentHours = localEntries[key] ?? 0
+      setSaving((s) => ({ ...s, [key]: true }))
+      try {
+        await saveTimeEntry({
+          projectId,
+          date,
+          hours: currentHours,
+          notes,
+        })
+      } catch (e) {
+        toast.error(e instanceof Error ? e.message : "Failed to save notes")
+        setLocalNotes((s) => {
+          const next = { ...s }
+          if (prev) {
+            next[key] = prev
+          } else {
+            delete next[key]
+          }
+          return next
+        })
+      } finally {
+        setSaving((s) => ({ ...s, [key]: false }))
+      }
+    },
+    [localNotes, localEntries]
   )
 
   // Group assignments by client
@@ -167,20 +235,41 @@ export function TimesheetGrid({
                       <TableCell className="font-medium sticky left-0 bg-background z-10">
                         {project.projectName}
                       </TableCell>
-                      {days.map((d) => (
-                        <TableCell key={d.date} className="p-0 text-center">
-                          <TimeCell
-                            hours={getHours(project.projectId, d.date)}
-                            onSave={(hours) =>
-                              handleSave(project.projectId, d.date, hours)
-                            }
-                            disabled={locked}
-                            saving={
-                              saving[`${project.projectId}:${d.date}`] ?? false
-                            }
-                          />
-                        </TableCell>
-                      ))}
+                      {days.map((d) => {
+                        const h = getHours(project.projectId, d.date)
+                        const n = getNotes(project.projectId, d.date)
+                        return (
+                          <TableCell
+                            key={d.date}
+                            className="p-0 text-center relative group"
+                          >
+                            <TimeCell
+                              hours={h}
+                              onSave={(hours) =>
+                                handleSave(project.projectId, d.date, hours)
+                              }
+                              disabled={locked}
+                              saving={
+                                saving[`${project.projectId}:${d.date}`] ??
+                                false
+                              }
+                            />
+                            {(h > 0 || n) && (
+                              <NotePopover
+                                notes={n}
+                                onSave={(notes) =>
+                                  handleSaveNotes(
+                                    project.projectId,
+                                    d.date,
+                                    notes
+                                  )
+                                }
+                                disabled={locked}
+                              />
+                            )}
+                          </TableCell>
+                        )
+                      })}
                       <TableCell className="text-center font-mono font-semibold bg-muted/30">
                         {projectTotal(project.projectId) || ""}
                       </TableCell>
