@@ -394,7 +394,7 @@
 
 ---
 
-## Settings (P2 - Future)
+## Settings (P1)
 
 ### SET-1: Company Settings
 **As an** admin
@@ -402,9 +402,23 @@
 **So that** the app works for our workflow
 
 **Acceptance Criteria:**
+- [ ] Settings page accessible from admin nav
 - [ ] Company name (shown in header/export)
-- [ ] Week start day (Monday default, configurable)
-- [ ] Default currency
+- [ ] Default payment terms (Due on receipt, Net 15, Net 30, Net 60)
+- [ ] Default bill rate (cents, cascades to new projects)
+- [ ] Default pay rate (cents, cascades to new users)
+- [ ] Default currency (USD default)
+- [ ] Fiscal year start month (for export date range presets)
+- [ ] Settings stored in single-row `CompanySettings` table
+- [ ] Seed with sensible defaults on first run
+
+**Payment Terms Hierarchy:**
+1. Project `paymentTerms` (override, if set)
+2. Company `defaultPaymentTerms` (fallback)
+
+**Rate Defaults Hierarchy:**
+- Bill rate: ProjectAssignment override > Project default > Company default
+- Pay rate: ProjectAssignment override > User default > Company default
 
 ### SET-2: My Profile
 **As a** user
@@ -418,33 +432,73 @@
 
 ---
 
-## Implementation Order (Suggested)
+## Spikes / Research
 
-### Phase 1: Core Time Tracking
-1. AUTH-1 (Login)
-2. USER-1, USER-2 (View/Create users - need at least one)
-3. CLIENT-1, CLIENT-2 (View/Create clients)
-4. PROJ-1, PROJ-2, PROJ-5 (View/Create projects, Assign users)
-5. TIME-1, TIME-2 (View/Enter time)
-6. UI-2 (Navigation)
+### SPIKE-1: QuickBooks Online Integration (P1)
+**As a** team
+**We want to** research QuickBooks Online API integration
+**So that** we can push invoices directly instead of CSV export
 
-### Phase 2: Approval Workflow
-7. CARD-1 (Submit timecard)
-8. CARD-2, CARD-3 (View/Approve timecards)
-9. CARD-5 (Mark as invoiced)
-10. TIME-4 (View locked timesheet)
+**Research Questions:**
+- [ ] QB Online API: OAuth flow for connecting a QB company
+- [ ] Can we create invoices via API from approved timecards?
+- [ ] What QB entities map to our data? (Customer=Client, Service Item=Project)
+- [ ] Effort estimate for a minimal "Send to QuickBooks" button
+- [ ] Licensing / API rate limits / cost
+- [ ] If viable, QB handles invoice delivery (email) — reduces our email needs
 
-### Phase 3: Export & Polish
-11. EXPORT-1, EXPORT-2 (CSV export)
-12. CLIENT-3, CLIENT-4 (Edit/Archive clients)
-13. PROJ-3, PROJ-4 (Edit/Archive projects)
-14. USER-3, USER-4 (Edit/Archive users)
-15. TIME-3 (Notes)
-16. CARD-4 (Reject timecard)
+**Output:** Decision doc on whether to build, and rough implementation plan if yes.
 
-### Phase 4: Nice to Have
-17. AUTH-2 (Password reset)
-18. USER-5 (Admin reset password)
-19. UI-1 (Dashboard)
-20. UI-3 (Responsive)
-21. SET-1, SET-2 (Settings)
+### SPIKE-2: Transactional Email (P1)
+**As a** team
+**We want to** research adding transactional email
+**So that** we can send user invites, password resets, and notifications
+
+**Research Questions:**
+- [ ] Evaluate providers: Resend, SendGrid, Postmark (cost for 5-20 users)
+- [ ] Use cases: new user invite, password reset, timecard submitted/approved notifications
+- [ ] Can we defer this if QuickBooks handles invoice emails? (SPIKE-1)
+- [ ] Minimal setup: just user invite + password reset
+- [ ] Self-hosted option (SMTP relay) vs SaaS provider
+
+**Output:** Provider recommendation and priority of email use cases.
+
+---
+
+## Implementation Order
+
+### Phase 1: Core Time Tracking (DONE)
+1. ~~AUTH-1 (Login)~~
+2. ~~USER-1, USER-2 (View/Create users)~~
+3. ~~CLIENT-1, CLIENT-2 (View/Create clients)~~
+4. ~~PROJ-1, PROJ-2, PROJ-5 (View/Create projects, Assign users)~~
+5. ~~TIME-1, TIME-2 (View/Enter time)~~
+6. ~~UI-2 (Navigation)~~
+
+### Phase 2: Approval Workflow (DONE)
+7. ~~CARD-1 (Submit timecard)~~
+8. ~~CARD-2, CARD-3 (View/Approve timecards)~~
+9. ~~CARD-5 (Mark as invoiced)~~
+10. ~~TIME-4 (View locked timesheet)~~
+
+### Phase 3: Export & Polish (DONE)
+11. ~~EXPORT-1, EXPORT-2 (CSV export + QuickBooks format)~~
+12. ~~CLIENT-3, CLIENT-4 (Edit/Archive clients)~~
+13. ~~PROJ-3, PROJ-4 (Edit/Archive projects)~~
+14. ~~USER-3, USER-4 (Edit/Archive users)~~
+
+### Phase 4: Settings & P1 Features
+15. SET-1 (Company settings with default payment terms, rates)
+16. TIME-3 (Notes on time entries)
+17. CARD-4 (Reject timecard)
+18. UI-1 (Dashboard/home)
+
+### Phase 5: Spikes & Integration
+19. SPIKE-1 (QuickBooks Online integration research)
+20. SPIKE-2 (Transactional email research)
+21. AUTH-2, USER-5 (Password reset — pending SPIKE-2 outcome)
+
+### Phase 6: Nice to Have
+22. SET-2 (My profile / change password)
+23. UI-3 (Responsive layout)
+24. EXPORT filters (client, project, user) + preview table

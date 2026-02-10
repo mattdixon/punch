@@ -4,6 +4,20 @@ import { hash } from "bcryptjs"
 const prisma = new PrismaClient()
 
 async function main() {
+  await prisma.companySettings.upsert({
+    where: { id: "default" },
+    update: {},
+    create: {
+      id: "default",
+      companyName: "Punch",
+      defaultPaymentTerms: "Net 15",
+      defaultBillCents: 15000,
+      defaultPayCents: 5000,
+      defaultCurrency: "USD",
+      fiscalYearStartMonth: 1,
+    },
+  })
+
   const admin = await prisma.user.upsert({
     where: { email: "admin@punch.local" },
     update: {},

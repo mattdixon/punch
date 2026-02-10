@@ -41,31 +41,50 @@ type Client = {
   name: string
 }
 
+type CompanyDefaults = {
+  paymentTerms: string
+  billRateCents: number
+}
+
 export function ProjectFormDialog({
   open,
   onOpenChange,
   clients,
   project,
+  companyDefaults,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   clients: Client[]
   project?: Project
+  companyDefaults?: CompanyDefaults
 }) {
   const isEditing = !!project
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState(project?.name ?? "")
   const [clientId, setClientId] = useState(project?.clientId ?? "")
   const [billRate, setBillRate] = useState(
-    project ? (project.defaultBillCents / 100).toFixed(2) : ""
+    project
+      ? (project.defaultBillCents / 100).toFixed(2)
+      : companyDefaults?.billRateCents
+        ? (companyDefaults.billRateCents / 100).toFixed(2)
+        : ""
   )
-  const [paymentTerms, setPaymentTerms] = useState(project?.paymentTerms ?? "Net 30")
+  const [paymentTerms, setPaymentTerms] = useState(
+    project?.paymentTerms ?? companyDefaults?.paymentTerms ?? "Net 30"
+  )
 
   function reset() {
     setName(project?.name ?? "")
     setClientId(project?.clientId ?? "")
-    setBillRate(project ? (project.defaultBillCents / 100).toFixed(2) : "")
-    setPaymentTerms(project?.paymentTerms ?? "Net 30")
+    setBillRate(
+      project
+        ? (project.defaultBillCents / 100).toFixed(2)
+        : companyDefaults?.billRateCents
+          ? (companyDefaults.billRateCents / 100).toFixed(2)
+          : ""
+    )
+    setPaymentTerms(project?.paymentTerms ?? companyDefaults?.paymentTerms ?? "Net 30")
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -83,8 +102,12 @@ export function ProjectFormDialog({
         toast.success("Project created")
         setName("")
         setClientId("")
-        setBillRate("")
-        setPaymentTerms("Net 30")
+        setBillRate(
+          companyDefaults?.billRateCents
+            ? (companyDefaults.billRateCents / 100).toFixed(2)
+            : ""
+        )
+        setPaymentTerms(companyDefaults?.paymentTerms ?? "Net 30")
       }
       onOpenChange(false)
     } catch (e) {

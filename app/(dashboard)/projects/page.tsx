@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getProjects, getActiveClients } from "@/app/actions/projects"
+import { getCompanySettings } from "@/app/actions/settings"
 import { ProjectTable } from "@/components/projects/project-table"
 import { ToggleArchived } from "@/components/team/toggle-archived"
 
@@ -16,9 +17,10 @@ export default async function ProjectsPage({
 
   const params = await searchParams
   const showArchived = params.showArchived === "true"
-  const [projects, clients] = await Promise.all([
+  const [projects, clients, settings] = await Promise.all([
     getProjects(showArchived),
     getActiveClients(),
+    getCompanySettings(),
   ])
 
   return (
@@ -32,7 +34,14 @@ export default async function ProjectsPage({
         </div>
         <ToggleArchived showArchived={showArchived} />
       </div>
-      <ProjectTable projects={projects} clients={clients} />
+      <ProjectTable
+        projects={projects}
+        clients={clients}
+        companyDefaults={{
+          paymentTerms: settings.defaultPaymentTerms,
+          billRateCents: settings.defaultBillCents,
+        }}
+      />
     </div>
   )
 }

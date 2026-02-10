@@ -34,11 +34,13 @@ export function UserFormDialog({
   onOpenChange,
   user,
   onPasswordGenerated,
+  companyDefaultPayCents,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   user?: User
   onPasswordGenerated?: (name: string, password: string) => void
+  companyDefaultPayCents?: number
 }) {
   const isEditing = !!user
   const [saving, setSaving] = useState(false)
@@ -46,14 +48,24 @@ export function UserFormDialog({
   const [email, setEmail] = useState(user?.email ?? "")
   const [role, setRole] = useState<"ADMIN" | "MEMBER">(user?.role ?? "MEMBER")
   const [payRate, setPayRate] = useState(
-    user ? (user.defaultPayCents / 100).toFixed(2) : ""
+    user
+      ? (user.defaultPayCents / 100).toFixed(2)
+      : companyDefaultPayCents
+        ? (companyDefaultPayCents / 100).toFixed(2)
+        : ""
   )
 
   function reset() {
     setName(user?.name ?? "")
     setEmail(user?.email ?? "")
     setRole(user?.role ?? "MEMBER")
-    setPayRate(user ? (user.defaultPayCents / 100).toFixed(2) : "")
+    setPayRate(
+      user
+        ? (user.defaultPayCents / 100).toFixed(2)
+        : companyDefaultPayCents
+          ? (companyDefaultPayCents / 100).toFixed(2)
+          : ""
+    )
   }
 
   async function handleSubmit(e: React.FormEvent) {

@@ -10,6 +10,7 @@ import {
   Briefcase,
   FolderOpen,
   Download,
+  Settings,
 } from "lucide-react"
 
 const navItems = [
@@ -56,9 +57,10 @@ interface SidebarProps {
     name?: string | null
     role: string
   }
+  companyName?: string
 }
 
-export function Sidebar({ user }: SidebarProps) {
+export function Sidebar({ user, companyName }: SidebarProps) {
   const pathname = usePathname()
 
   const visibleItems = navItems.filter((item) =>
@@ -69,7 +71,7 @@ export function Sidebar({ user }: SidebarProps) {
     <aside className="flex w-64 flex-col border-r bg-background">
       <div className="flex h-14 items-center border-b px-6">
         <Link href="/timesheet" className="text-xl font-bold">
-          Punch
+          {companyName || "Punch"}
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">
@@ -92,6 +94,22 @@ export function Sidebar({ user }: SidebarProps) {
           )
         })}
       </nav>
+      {user.role === "ADMIN" && (
+        <div className="border-t p-4">
+          <Link
+            href="/settings"
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              pathname.startsWith("/settings")
+                ? "bg-muted text-foreground"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+            )}
+          >
+            <Settings className="h-4 w-4" />
+            Settings
+          </Link>
+        </div>
+      )}
     </aside>
   )
 }

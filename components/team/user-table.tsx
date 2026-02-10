@@ -39,9 +39,11 @@ type User = {
 export function UserTable({
   users,
   showArchived,
+  companyDefaultPayCents,
 }: {
   users: User[]
   showArchived: boolean
+  companyDefaultPayCents?: number
 }) {
   const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -184,6 +186,7 @@ export function UserTable({
         open={createOpen}
         onOpenChange={setCreateOpen}
         onPasswordGenerated={(name, password) => setTempPassword({ name, password })}
+        companyDefaultPayCents={companyDefaultPayCents}
       />
 
       {editUser && (

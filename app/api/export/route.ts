@@ -69,6 +69,14 @@ export async function GET(request: NextRequest) {
     orderBy: [{ week: "asc" }, { date: "asc" }, { user: { name: "asc" } }],
   })
 
+  // Get company settings for rate fallbacks
+  const companySettings = await prisma.companySettings.findUnique({
+    where: { id: "default" },
+  })
+  const companyBillCents = companySettings?.defaultBillCents ?? 0
+  const companyPayCents = companySettings?.defaultPayCents ?? 0
+  const companyPaymentTerms = companySettings?.defaultPaymentTerms ?? "Net 30"
+
   // Get assignments for rate overrides
   const assignments = await prisma.projectAssignment.findMany({
     where: {
@@ -101,7 +109,7 @@ export async function GET(request: NextRequest) {
     for (const e of entries) {
       const key = `${e.project.client.name}:${e.project.name}`
       const assignment = assignmentMap.get(`${e.userId}:${e.projectId}`)
-      const billRateCents = assignment?.billRateCents ?? e.project.defaultBillCents
+      const billRateCents = assignment?.billRateCents || e.project.defaultBillCents || companyBillCents
       const hours = e.hours.toNumber()
       const billAmount = (billRateCents * hours) / 100
 
@@ -116,7 +124,7 @@ export async function GET(request: NextRequest) {
           hours,
           billRateCents,
           billAmount,
-          paymentTerms: e.project.paymentTerms,
+          paymentTerms: e.project.paymentTerms || companyPaymentTerms,
         })
       }
     }
@@ -222,8 +230,8 @@ export async function GET(request: NextRequest) {
 
   const rows = entries.map((e) => {
     const assignment = assignmentMap.get(`${e.userId}:${e.projectId}`)
-    const payRateCents = assignment?.payRateCents ?? e.user.defaultPayCents
-    const billRateCents = assignment?.billRateCents ?? e.project.defaultBillCents
+    const payRateCents = assignment?.payRateCents || e.user.defaultPayCents || companyPayCents
+    const billRateCents = assignment?.billRateCents || e.project.defaultBillCents || companyBillCents
     const hours = e.hours.toNumber()
     const payAmount = (payRateCents * hours) / 100
     const billAmount = (billRateCents * hours) / 100

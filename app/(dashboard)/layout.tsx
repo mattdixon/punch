@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
+import { getCompanySettings } from "@/app/actions/settings"
 
 export default async function DashboardLayout({
   children,
@@ -14,9 +15,11 @@ export default async function DashboardLayout({
     redirect("/login")
   }
 
+  const settings = await getCompanySettings()
+
   return (
     <div className="flex h-screen">
-      <Sidebar user={session.user} />
+      <Sidebar user={session.user} companyName={settings.companyName} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header user={session.user} />
         <main className="flex-1 overflow-y-auto p-6 bg-muted/40">

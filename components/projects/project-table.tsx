@@ -49,12 +49,19 @@ type Client = {
   name: string
 }
 
+type CompanyDefaults = {
+  paymentTerms: string
+  billRateCents: number
+}
+
 export function ProjectTable({
   projects,
   clients,
+  companyDefaults,
 }: {
   projects: Project[]
   clients: Client[]
+  companyDefaults?: CompanyDefaults
 }) {
   const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -193,6 +200,7 @@ export function ProjectTable({
         open={createOpen}
         onOpenChange={setCreateOpen}
         clients={clients}
+        companyDefaults={companyDefaults}
       />
 
       {editProject && (
@@ -201,6 +209,7 @@ export function ProjectTable({
           onOpenChange={(open) => !open && setEditProject(null)}
           clients={clients}
           project={editProject}
+          companyDefaults={companyDefaults}
         />
       )}
 

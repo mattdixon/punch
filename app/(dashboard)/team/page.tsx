@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { getUsers } from "@/app/actions/users"
+import { getCompanySettings } from "@/app/actions/settings"
 import { UserTable } from "@/components/team/user-table"
 import { ToggleArchived } from "@/components/team/toggle-archived"
 
@@ -16,7 +17,10 @@ export default async function TeamPage({
 
   const params = await searchParams
   const showArchived = params.showArchived === "true"
-  const users = await getUsers(showArchived)
+  const [users, settings] = await Promise.all([
+    getUsers(showArchived),
+    getCompanySettings(),
+  ])
 
   return (
     <div className="space-y-6">
@@ -29,7 +33,11 @@ export default async function TeamPage({
         </div>
         <ToggleArchived showArchived={showArchived} />
       </div>
-      <UserTable users={users} showArchived={showArchived} />
+      <UserTable
+        users={users}
+        showArchived={showArchived}
+        companyDefaultPayCents={settings.defaultPayCents}
+      />
     </div>
   )
 }
