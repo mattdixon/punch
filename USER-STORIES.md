@@ -434,34 +434,34 @@
 
 ## Spikes / Research
 
-### SPIKE-1: QuickBooks Online Integration (P1)
+### SPIKE-1: QuickBooks Online Integration (P1) ✅
 **As a** team
 **We want to** research QuickBooks Online API integration
 **So that** we can push invoices directly instead of CSV export
 
 **Research Questions:**
-- [ ] QB Online API: OAuth flow for connecting a QB company
-- [ ] Can we create invoices via API from approved timecards?
-- [ ] What QB entities map to our data? (Customer=Client, Service Item=Project)
-- [ ] Effort estimate for a minimal "Send to QuickBooks" button
-- [ ] Licensing / API rate limits / cost
-- [ ] If viable, QB handles invoice delivery (email) — reduces our email needs
+- [x] QB Online API: OAuth flow for connecting a QB company
+- [x] Can we create invoices via API from approved timecards?
+- [x] What QB entities map to our data? (Customer=Client, Service Item=Project)
+- [x] Effort estimate for a minimal "Send to QuickBooks" button
+- [x] Licensing / API rate limits / cost
+- [x] If viable, QB handles invoice delivery (email) — reduces our email needs
 
-**Output:** Decision doc on whether to build, and rough implementation plan if yes.
+**Output:** [Decision doc](docs/SPIKE-1-quickbooks.md) — BUILD, ~2-3 weeks, $0 API cost. Refresh tokens last 5 years. QBO handles invoice emails.
 
-### SPIKE-2: Transactional Email (P1)
+### SPIKE-2: Transactional Email (P1) ✅
 **As a** team
 **We want to** research adding transactional email
 **So that** we can send user invites, password resets, and notifications
 
 **Research Questions:**
-- [ ] Evaluate providers: Resend, SendGrid, Postmark (cost for 5-20 users)
-- [ ] Use cases: new user invite, password reset, timecard submitted/approved notifications
-- [ ] Can we defer this if QuickBooks handles invoice emails? (SPIKE-1)
-- [ ] Minimal setup: just user invite + password reset
-- [ ] Self-hosted option (SMTP relay) vs SaaS provider
+- [x] Evaluate providers: Resend, SendGrid, Postmark (cost for 5-20 users)
+- [x] Use cases: new user invite, password reset, timecard submitted/approved notifications
+- [x] Can we defer this if QuickBooks handles invoice emails? (SPIKE-1)
+- [x] Minimal setup: just user invite + password reset
+- [x] Self-hosted option (SMTP relay) vs SaaS provider
 
-**Output:** Provider recommendation and priority of email use cases.
+**Output:** [Decision doc](docs/SPIKE-2-email.md) — USE RESEND, ~3 days, $0/month. react-email for templates.
 
 ---
 
@@ -493,10 +493,10 @@
 17. ~~CARD-4 (Reject timecard)~~
 18. ~~UI-1 (Dashboard/home)~~
 
-### Phase 5: Spikes & Integration
-19. SPIKE-1 (QuickBooks Online integration research)
-20. SPIKE-2 (Transactional email research)
-21. AUTH-2, USER-5 (Password reset — pending SPIKE-2 outcome)
+### Phase 5: Spikes & Integration (DONE)
+19. ~~SPIKE-1 (QuickBooks Online integration research)~~ → [Decision: BUILD](docs/SPIKE-1-quickbooks.md)
+20. ~~SPIKE-2 (Transactional email research)~~ → [Decision: Resend](docs/SPIKE-2-email.md)
+21. AUTH-2, USER-5 (Password reset — use Resend, ~3 days)
 
 ### Phase 6: Nice to Have
 22. SET-2 (My profile / change password)
