@@ -12,6 +12,7 @@ import {
   FolderOpen,
   Download,
   Settings,
+  UserCircle,
 } from "lucide-react"
 
 const navItems = [
@@ -104,8 +105,20 @@ export function Sidebar({ user, companyName }: SidebarProps) {
           )
         })}
       </nav>
-      {user.role === "ADMIN" && (
-        <div className="border-t p-4">
+      <div className="border-t p-4 space-y-1">
+        <Link
+          href="/profile"
+          className={cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            pathname.startsWith("/profile")
+              ? "bg-muted text-foreground"
+              : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+          )}
+        >
+          <UserCircle className="h-4 w-4" />
+          My Profile
+        </Link>
+        {user.role === "ADMIN" && (
           <Link
             href="/settings"
             className={cn(
@@ -118,8 +131,8 @@ export function Sidebar({ user, companyName }: SidebarProps) {
             <Settings className="h-4 w-4" />
             Settings
           </Link>
-        </div>
-      )}
+        )}
+      </div>
     </aside>
   )
 }
