@@ -1,12 +1,15 @@
 import { auth } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { ExportForm } from "@/components/export/export-form"
+import { getExportFilterOptions } from "@/app/actions/export"
 
 export default async function ExportPage() {
   const session = await auth()
   if (session?.user?.role !== "ADMIN") {
     redirect("/timesheet")
   }
+
+  const filterOptions = await getExportFilterOptions()
 
   return (
     <div className="space-y-6">
@@ -16,7 +19,7 @@ export default async function ExportPage() {
           Download time entries as CSV for invoicing.
         </p>
       </div>
-      <ExportForm />
+      <ExportForm filterOptions={filterOptions} />
     </div>
   )
 }

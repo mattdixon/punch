@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get("status")
   const format = searchParams.get("format")
   const invoiceNoParam = searchParams.get("invoiceNo")
+  const clientId = searchParams.get("clientId")
+  const projectId = searchParams.get("projectId")
+  const userId = searchParams.get("userId")
 
   const where: Record<string, unknown> = {}
 
@@ -31,6 +34,16 @@ export async function GET(request: NextRequest) {
     if (startWeek) weekFilter.gte = startWeek
     if (endWeek) weekFilter.lte = endWeek
     where.week = weekFilter
+  }
+
+  if (clientId) {
+    where.project = { clientId }
+  }
+  if (projectId) {
+    where.projectId = projectId
+  }
+  if (userId) {
+    where.userId = userId
   }
 
   // If status filter, only include entries for timecards with that status
