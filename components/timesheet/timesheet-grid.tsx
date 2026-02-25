@@ -203,9 +203,10 @@ export function TimesheetGrid({
   }
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 overflow-x-auto">
+      <div className="min-w-[800px]">
       {/* Header row */}
-      <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px text-sm">
+      <div className="grid grid-cols-[minmax(150px,1.5fr)_repeat(7,1fr)_70px] gap-px text-sm">
         <div className="px-3 py-2 text-muted-foreground font-medium">Project</div>
         {days.map((d) => (
           <div key={d.date} className="text-center px-1 py-2">
@@ -237,7 +238,7 @@ export function TimesheetGrid({
               return (
                 <div key={project.projectId}>
                   {/* Hours row */}
-                  <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px">
+                  <div className="grid grid-cols-[minmax(150px,1.5fr)_repeat(7,1fr)_70px] gap-px">
                     <div className="flex items-center gap-2 px-3 py-2">
                       <span className="font-medium text-sm truncate">
                         {project.projectName}
@@ -287,7 +288,7 @@ export function TimesheetGrid({
 
                   {/* Inline notes row */}
                   {isExpanded && (
-                    <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px bg-muted/20 border-t border-dashed">
+                    <div className="grid grid-cols-[minmax(150px,1.5fr)_repeat(7,1fr)_70px] gap-px bg-muted/20 border-t border-dashed">
                       <div className="flex items-start px-3 py-1.5">
                         <ChevronDown
                           className="size-3 text-muted-foreground/50 mt-0.5 shrink-0 cursor-pointer hover:text-muted-foreground"
@@ -365,7 +366,7 @@ export function TimesheetGrid({
         ))}
 
         {/* Daily totals row */}
-        <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px bg-muted/40">
+        <div className="grid grid-cols-[minmax(150px,1.5fr)_repeat(7,1fr)_70px] gap-px bg-muted/40">
           <div className="px-3 py-2.5 text-sm font-semibold">Daily Total</div>
           {days.map((d) => (
             <div
@@ -379,6 +380,7 @@ export function TimesheetGrid({
             {grandTotal || ""}
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

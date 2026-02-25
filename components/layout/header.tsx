@@ -31,7 +31,7 @@ export function Header({ user }: HeaderProps) {
       .toUpperCase() ?? "?"
 
   return (
-    <header className="flex h-14 items-center justify-end border-b bg-background px-6">
+    <header className="flex h-14 items-center justify-end border-b bg-background px-4 pl-12 lg:pl-6 lg:px-6">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2">

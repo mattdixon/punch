@@ -382,15 +382,15 @@
 - [ ] Current page highlighted
 - [ ] User menu with logout
 
-### UI-3: Responsive Layout (P2)
+### UI-3: Responsive Layout (P2) ✅
 **As a** user
 **I want to** use the app on my laptop or large monitor
 **So that** it works on different screen sizes
 
 **Acceptance Criteria:**
-- [ ] Minimum supported width: 1024px
-- [ ] No horizontal scroll on supported widths
-- [ ] Tablet (768px+) nice to have but not required
+- [x] Minimum supported width: 1024px
+- [x] No horizontal scroll on supported widths
+- [x] Tablet (768px+) nice to have but not required
 
 ---
 
@@ -420,15 +420,15 @@
 - Bill rate: ProjectAssignment override > Project default > Company default
 - Pay rate: ProjectAssignment override > User default > Company default
 
-### SET-2: My Profile
+### SET-2: My Profile ✅
 **As a** user
 **I want to** update my profile
 **So that** my info is correct
 
 **Acceptance Criteria:**
-- [ ] Change name
-- [ ] Change password
-- [ ] View my role and rate (read-only for members)
+- [x] Change name
+- [x] Change password
+- [x] View my role and rate (read-only for members)
 
 ---
 
@@ -498,7 +498,7 @@
 20. ~~SPIKE-2 (Transactional email research)~~ → [Decision: Resend](docs/SPIKE-2-email.md)
 21. ~~AUTH-2, USER-5 (Password reset + user invites via Resend)~~
 
-### Phase 6: Nice to Have
-22. SET-2 (My profile / change password)
-23. UI-3 (Responsive layout)
-24. EXPORT filters (client, project, user) + preview table
+### Phase 6: Nice to Have (DONE)
+22. ~~SET-2 (My profile / change password)~~
+23. ~~UI-3 (Responsive layout)~~
+24. ~~EXPORT filters (client, project, user) + preview table~~

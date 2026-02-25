@@ -28,7 +28,7 @@ export default async function TimesheetPage({
           : ""
 
   return (
-    <div className={`space-y-6 ${statusBg} -m-6 p-6 min-h-full`}>
+    <div className={`space-y-6 ${statusBg} -m-4 p-4 lg:-m-6 lg:p-6 min-h-full`}>
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold">Timesheet</h1>

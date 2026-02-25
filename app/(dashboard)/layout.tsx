@@ -20,9 +20,9 @@ export default async function DashboardLayout({
   return (
     <div className="flex h-screen">
       <Sidebar user={session.user} companyName={settings.companyName} />
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header user={session.user} />
-        <main className="flex-1 overflow-y-auto p-6 bg-muted/40">
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-muted/40">
           {children}
         </main>
       </div>
