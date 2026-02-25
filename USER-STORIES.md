@@ -22,16 +22,16 @@
 - [ ] Session persists across page refreshes
 - [ ] Logout button in header
 
-### AUTH-2: Password Reset (P1)
+### AUTH-2: Password Reset (P1) ✅
 **As a** user
 **I want to** reset my password if I forget it
 **So that** I can regain access to my account
 
 **Acceptance Criteria:**
-- [ ] "Forgot password" link on login page
-- [ ] Email sent with reset link
-- [ ] Reset link expires after 24 hours
-- [ ] Can set new password from reset page
+- [x] "Forgot password" link on login page
+- [x] Email sent with reset link
+- [x] Reset link expires after 24 hours
+- [x] Can set new password from reset page
 
 ---
 
@@ -314,15 +314,15 @@
 - [ ] Archived users visible with "show archived" filter
 - [ ] Can restore archived user
 
-### USER-5: Reset User Password (P1)
+### USER-5: Reset User Password (P1) ✅
 **As an** admin
 **I want to** reset a user's password
 **So that** I can help them if they're locked out
 
 **Acceptance Criteria:**
-- [ ] "Reset Password" action on user
-- [ ] Sends password reset email to user
-- [ ] Or: sets temporary password and shows it
+- [x] "Reset Password" action on user
+- [x] Sends password reset email to user (when RESEND_API_KEY configured)
+- [x] Or: sets temporary password and shows it (fallback)
 
 ---
 
@@ -496,7 +496,7 @@
 ### Phase 5: Spikes & Integration (DONE)
 19. ~~SPIKE-1 (QuickBooks Online integration research)~~ → [Decision: BUILD](docs/SPIKE-1-quickbooks.md)
 20. ~~SPIKE-2 (Transactional email research)~~ → [Decision: Resend](docs/SPIKE-2-email.md)
-21. AUTH-2, USER-5 (Password reset — use Resend, ~3 days)
+21. ~~AUTH-2, USER-5 (Password reset + user invites via Resend)~~
 
 ### Phase 6: Nice to Have
 22. SET-2 (My profile / change password)

@@ -79,7 +79,11 @@ export function UserTable({
   async function handleResetPassword(id: string, name: string) {
     try {
       const result = await resetUserPassword(id)
-      setTempPassword({ name, password: result.tempPassword })
+      if (result.emailSent) {
+        toast.success(`Password reset email sent to ${name}`)
+      } else if (result.tempPassword) {
+        setTempPassword({ name, password: result.tempPassword })
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to reset password")
     }
@@ -185,7 +189,13 @@ export function UserTable({
       <UserFormDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
-        onPasswordGenerated={(name, password) => setTempPassword({ name, password })}
+        onUserCreated={(result) => {
+          if (result.emailSent) {
+            toast.success(`Invitation email sent to ${result.name}`)
+          } else if (result.tempPassword) {
+            setTempPassword({ name: result.name, password: result.tempPassword })
+          }
+        }}
         companyDefaultPayCents={companyDefaultPayCents}
       />
 

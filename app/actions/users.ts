@@ -4,6 +4,11 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcryptjs"
 import { revalidatePath } from "next/cache"
+import { createToken } from "@/lib/tokens"
+import { sendEmail, isEmailConfigured } from "@/lib/email"
+import { InviteEmail } from "@/components/emails/invite-email"
+import { ResetEmail } from "@/components/emails/reset-email"
+import { getCompanySettings } from "./settings"
 
 function generateTempPassword(): string {
   const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -48,7 +53,7 @@ export async function createUser(data: {
   email: string
   role: "ADMIN" | "MEMBER"
   defaultPayCents: number
-}): Promise<{ tempPassword: string }> {
+}): Promise<{ tempPassword?: string; emailSent?: boolean }> {
   await requireAdmin()
 
   const existing = await prisma.user.findUnique({
@@ -58,6 +63,36 @@ export async function createUser(data: {
     throw new Error("A user with this email already exists")
   }
 
+  if (isEmailConfigured()) {
+    const user = await prisma.user.create({
+      data: {
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        defaultPayCents: data.defaultPayCents,
+      },
+    })
+
+    const rawToken = await createToken(user.id, "INVITE")
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+    const inviteUrl = `${baseUrl}/set-password?token=${rawToken}&type=invite`
+    const settings = await getCompanySettings()
+
+    await sendEmail({
+      to: data.email,
+      subject: `You've been invited to ${settings.companyName}`,
+      react: InviteEmail({
+        name: data.name,
+        inviteUrl,
+        companyName: settings.companyName,
+      }),
+    })
+
+    revalidatePath("/team")
+    return { emailSent: true }
+  }
+
+  // Fallback: generate temp password (no email configured)
   const tempPassword = generateTempPassword()
   const passwordHash = await hash(tempPassword, 12)
 
@@ -132,9 +167,31 @@ export async function restoreUser(id: string) {
   revalidatePath("/team")
 }
 
-export async function resetUserPassword(id: string): Promise<{ tempPassword: string }> {
+export async function resetUserPassword(
+  id: string
+): Promise<{ tempPassword?: string; emailSent?: boolean }> {
   await requireAdmin()
 
+  if (isEmailConfigured()) {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id },
+      select: { id: true, name: true, email: true },
+    })
+
+    const rawToken = await createToken(user.id, "PASSWORD_RESET")
+    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
+    const resetUrl = `${baseUrl}/set-password?token=${rawToken}&type=reset`
+
+    await sendEmail({
+      to: user.email,
+      subject: "Reset your Punch password",
+      react: ResetEmail({ name: user.name, resetUrl }),
+    })
+
+    return { emailSent: true }
+  }
+
+  // Fallback: generate temp password (no email configured)
   const tempPassword = generateTempPassword()
   const passwordHash = await hash(tempPassword, 12)
 

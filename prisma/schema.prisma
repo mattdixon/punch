@@ -30,6 +30,7 @@ model User {
   updatedEntries  TimeEntry[]         @relation("UpdatedByUser")
   approvedCards   Timecard[]          @relation("ApprovedByUser")
   invoicedCards   Timecard[]          @relation("InvoicedByUser")
+  tokens          Token[]
 
   @@index([email])
   @@index([archivedAt])
@@ -154,6 +155,33 @@ enum TimecardStatus {
   SUBMITTED
   APPROVED
   INVOICED
+}
+
+// ============================================
+// COMPANY SETTINGS (singleton)
+// ============================================
+
+// ============================================
+// TOKENS (invite + password reset)
+// ============================================
+
+enum TokenType {
+  INVITE
+  PASSWORD_RESET
+}
+
+model Token {
+  id        String    @id @default(cuid())
+  type      TokenType
+  tokenHash String    @unique
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 // ============================================

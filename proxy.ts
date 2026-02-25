@@ -5,14 +5,22 @@ const proxy = auth((req) => {
   const { nextUrl } = req
   const isLoggedIn = !!req.auth
 
-  const isAuthPage = nextUrl.pathname.startsWith("/login")
+  const isLoginPage = nextUrl.pathname.startsWith("/login")
+  const isPublicAuthPage =
+    nextUrl.pathname.startsWith("/set-password") ||
+    nextUrl.pathname.startsWith("/forgot-password")
   const isApiAuthRoute = nextUrl.pathname.startsWith("/api/auth")
 
   if (isApiAuthRoute) {
     return NextResponse.next()
   }
 
-  if (isAuthPage) {
+  // Public auth pages are always accessible (even when logged in)
+  if (isPublicAuthPage) {
+    return NextResponse.next()
+  }
+
+  if (isLoginPage) {
     if (isLoggedIn) {
       return NextResponse.redirect(new URL("/timesheet", nextUrl))
     }

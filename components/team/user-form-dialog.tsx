@@ -33,13 +33,17 @@ export function UserFormDialog({
   open,
   onOpenChange,
   user,
-  onPasswordGenerated,
+  onUserCreated,
   companyDefaultPayCents,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   user?: User
-  onPasswordGenerated?: (name: string, password: string) => void
+  onUserCreated?: (result: {
+    name: string
+    tempPassword?: string
+    emailSent?: boolean
+  }) => void
   companyDefaultPayCents?: number
 }) {
   const isEditing = !!user
@@ -84,7 +88,7 @@ export function UserFormDialog({
         toast.success("User created")
         onOpenChange(false)
         reset()
-        onPasswordGenerated?.(name, result.tempPassword)
+        onUserCreated?.({ name, ...result })
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to save user")
