@@ -1,18 +1,11 @@
 "use client"
 
 import { useState, useCallback, Fragment } from "react"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import { TimeCell } from "./time-cell"
-import { NotePopover } from "./note-popover"
 import { saveTimeEntry } from "@/app/actions/timesheet"
 import { toast } from "sonner"
+import { MessageSquareText, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 type Assignment = {
   projectId: string
@@ -63,6 +56,8 @@ export function TimesheetGrid({
     return map
   })
   const [saving, setSaving] = useState<Record<string, boolean>>({})
+  const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({})
+  const [editingNote, setEditingNote] = useState<string | null>(null)
 
   const getHours = useCallback(
     (projectId: string, date: string) => {
@@ -107,7 +102,6 @@ export function TimesheetGrid({
         await saveTimeEntry({ projectId, date, hours })
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Failed to save")
-        // Revert on error
         setLocalEntries((prev) => {
           const next = { ...prev }
           if (current > 0) {
@@ -189,114 +183,203 @@ export function TimesheetGrid({
 
   const grandTotal = days.reduce((sum, d) => sum + dayTotal(d.date), 0)
 
+  function projectHasNotes(projectId: string) {
+    return days.some((d) => !!getNotes(projectId, d.date))
+  }
+
+  function toggleNotes(projectId: string) {
+    setExpandedNotes((prev) => ({
+      ...prev,
+      [projectId]: !prev[projectId],
+    }))
+  }
+
+  if (assignments.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-12 text-center text-muted-foreground">
+        No projects assigned. Ask an admin to assign you to a project.
+      </div>
+    )
+  }
+
   return (
-    <div className="rounded-md border overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="min-w-[200px] sticky left-0 bg-background z-10">
-              Project
-            </TableHead>
-            {days.map((d) => (
-              <TableHead key={d.date} className="text-center min-w-[80px]">
-                <div className="text-xs text-muted-foreground">{d.dayName}</div>
-                <div>{d.label}</div>
-              </TableHead>
-            ))}
-            <TableHead className="text-center min-w-[70px] font-bold">Total</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {assignments.length === 0 ? (
-            <TableRow>
-              <TableCell
-                colSpan={days.length + 2}
-                className="text-center text-muted-foreground py-12"
-              >
-                No projects assigned. Ask an admin to assign you to a project.
-              </TableCell>
-            </TableRow>
-          ) : (
-            <>
-              {grouped.map((group) => (
-                <Fragment key={`group-${group.clientName}`}>
-                  {grouped.length > 1 && (
-                    <TableRow key={`client-${group.clientName}`}>
-                      <TableCell
-                        colSpan={days.length + 2}
-                        className="bg-muted/50 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide"
-                      >
-                        {group.clientName}
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {group.projects.map((project) => (
-                    <TableRow key={project.projectId}>
-                      <TableCell className="font-medium sticky left-0 bg-background z-10">
+    <div className="space-y-0">
+      {/* Header row */}
+      <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px text-sm">
+        <div className="px-3 py-2 text-muted-foreground font-medium">Project</div>
+        {days.map((d) => (
+          <div key={d.date} className="text-center px-1 py-2">
+            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">
+              {d.dayName}
+            </div>
+            <div className="text-xs text-muted-foreground">{d.label}</div>
+          </div>
+        ))}
+        <div className="text-center px-1 py-2 text-xs text-muted-foreground font-semibold">
+          Total
+        </div>
+      </div>
+
+      {/* Project rows */}
+      <div className="rounded-lg border overflow-hidden divide-y">
+        {grouped.map((group) => (
+          <Fragment key={`group-${group.clientName}`}>
+            {grouped.length > 1 && (
+              <div className="bg-muted/40 px-3 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                {group.clientName}
+              </div>
+            )}
+            {group.projects.map((project) => {
+              const hasNotes = projectHasNotes(project.projectId)
+              const isExpanded = expandedNotes[project.projectId] ?? hasNotes
+              const pTotal = projectTotal(project.projectId)
+
+              return (
+                <div key={project.projectId}>
+                  {/* Hours row */}
+                  <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px">
+                    <div className="flex items-center gap-2 px-3 py-2">
+                      <span className="font-medium text-sm truncate">
                         {project.projectName}
-                      </TableCell>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => toggleNotes(project.projectId)}
+                        className={cn(
+                          "shrink-0 p-0.5 rounded transition-colors",
+                          hasNotes
+                            ? "text-blue-500 hover:text-blue-600"
+                            : "text-muted-foreground/40 hover:text-muted-foreground"
+                        )}
+                        title={isExpanded ? "Hide notes" : "Show notes"}
+                      >
+                        <MessageSquareText className="size-3.5" />
+                      </button>
+                    </div>
+                    {days.map((d) => {
+                      const h = getHours(project.projectId, d.date)
+                      const n = getNotes(project.projectId, d.date)
+                      return (
+                        <div
+                          key={d.date}
+                          className={cn(
+                            "relative",
+                            n && "after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-blue-400"
+                          )}
+                        >
+                          <TimeCell
+                            hours={h}
+                            onSave={(hours) =>
+                              handleSave(project.projectId, d.date, hours)
+                            }
+                            disabled={locked}
+                            saving={
+                              saving[`${project.projectId}:${d.date}`] ?? false
+                            }
+                          />
+                        </div>
+                      )
+                    })}
+                    <div className="flex items-center justify-center text-sm font-mono font-semibold bg-muted/30">
+                      {pTotal || ""}
+                    </div>
+                  </div>
+
+                  {/* Inline notes row */}
+                  {isExpanded && (
+                    <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px bg-muted/20 border-t border-dashed">
+                      <div className="flex items-start px-3 py-1.5">
+                        <ChevronDown
+                          className="size-3 text-muted-foreground/50 mt-0.5 shrink-0 cursor-pointer hover:text-muted-foreground"
+                          onClick={() => toggleNotes(project.projectId)}
+                        />
+                      </div>
                       {days.map((d) => {
-                        const h = getHours(project.projectId, d.date)
+                        const key = `${project.projectId}:${d.date}`
                         const n = getNotes(project.projectId, d.date)
-                        return (
-                          <TableCell
-                            key={d.date}
-                            className="p-0 text-center relative group"
-                          >
-                            <TimeCell
-                              hours={h}
-                              onSave={(hours) =>
-                                handleSave(project.projectId, d.date, hours)
-                              }
-                              disabled={locked}
-                              saving={
-                                saving[`${project.projectId}:${d.date}`] ??
-                                false
-                              }
-                            />
-                            {(h > 0 || n) && (
-                              <NotePopover
-                                notes={n}
-                                onSave={(notes) =>
-                                  handleSaveNotes(
-                                    project.projectId,
-                                    d.date,
-                                    notes
-                                  )
-                                }
-                                disabled={locked}
+                        const h = getHours(project.projectId, d.date)
+                        const isEditingThis = editingNote === key
+
+                        if (isEditingThis) {
+                          return (
+                            <div key={d.date} className="px-0.5 py-1">
+                              <textarea
+                                autoFocus
+                                className="w-full text-[11px] leading-tight bg-background border rounded px-1.5 py-1 resize-none outline-none focus:ring-1 focus:ring-ring"
+                                rows={2}
+                                defaultValue={n ?? ""}
+                                placeholder="Note..."
+                                onBlur={(e) => {
+                                  const val = e.target.value.trim() || null
+                                  handleSaveNotes(project.projectId, d.date, val)
+                                  setEditingNote(null)
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Escape") {
+                                    setEditingNote(null)
+                                  } else if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault()
+                                    const val =
+                                      (e.target as HTMLTextAreaElement).value.trim() ||
+                                      null
+                                    handleSaveNotes(project.projectId, d.date, val)
+                                    setEditingNote(null)
+                                  }
+                                }}
                               />
+                            </div>
+                          )
+                        }
+
+                        return (
+                          <div
+                            key={d.date}
+                            className={cn(
+                              "px-1 py-1 min-h-[28px] cursor-pointer group/note",
+                              !locked && "hover:bg-muted/40",
+                              !h && !n && "opacity-30"
                             )}
-                          </TableCell>
+                            onClick={() => {
+                              if (!locked && (h > 0 || n)) setEditingNote(key)
+                            }}
+                          >
+                            {n ? (
+                              <p className="text-[11px] leading-tight text-muted-foreground line-clamp-2">
+                                {n}
+                              </p>
+                            ) : h > 0 ? (
+                              <p className="text-[11px] leading-tight text-muted-foreground/40 italic group-hover/note:text-muted-foreground/60">
+                                {locked ? "" : "Add note..."}
+                              </p>
+                            ) : null}
+                          </div>
                         )
                       })}
-                      <TableCell className="text-center font-mono font-semibold bg-muted/30">
-                        {projectTotal(project.projectId) || ""}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </Fragment>
-              ))}
-              <TableRow className="border-t-2">
-                <TableCell className="font-bold sticky left-0 bg-background z-10">
-                  Daily Total
-                </TableCell>
-                {days.map((d) => (
-                  <TableCell
-                    key={d.date}
-                    className="text-center font-mono font-semibold bg-muted/30"
-                  >
-                    {dayTotal(d.date) || ""}
-                  </TableCell>
-                ))}
-                <TableCell className="text-center font-mono font-bold bg-muted/50">
-                  {grandTotal || ""}
-                </TableCell>
-              </TableRow>
-            </>
-          )}
-        </TableBody>
-      </Table>
+                      <div />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </Fragment>
+        ))}
+
+        {/* Daily totals row */}
+        <div className="grid grid-cols-[minmax(180px,1.5fr)_repeat(7,1fr)_80px] gap-px bg-muted/40">
+          <div className="px-3 py-2.5 text-sm font-semibold">Daily Total</div>
+          {days.map((d) => (
+            <div
+              key={d.date}
+              className="flex items-center justify-center text-sm font-mono font-semibold"
+            >
+              {dayTotal(d.date) || ""}
+            </div>
+          ))}
+          <div className="flex items-center justify-center text-sm font-mono font-bold bg-muted/30">
+            {grandTotal || ""}
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

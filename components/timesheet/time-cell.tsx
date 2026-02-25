@@ -30,7 +30,6 @@ export function TimeCell({
     const parsed = parseFloat(value)
     if (isNaN(parsed) || parsed < 0) {
       if (hours > 0) {
-        // If they cleared it, treat as 0 (delete)
         onSave(0)
       }
       return
@@ -63,7 +62,7 @@ export function TimeCell({
         onChange={(e) => setValue(e.target.value)}
         onBlur={commitValue}
         onKeyDown={handleKeyDown}
-        className="w-full h-10 text-center text-sm font-mono bg-background border-2 border-primary outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+        className="w-full h-11 text-center text-sm font-mono bg-background border-2 border-primary rounded-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
       />
     )
   }
@@ -72,12 +71,12 @@ export function TimeCell({
     <div
       onClick={startEditing}
       className={cn(
-        "h-10 flex items-center justify-center text-sm font-mono cursor-pointer transition-colors",
+        "h-11 flex items-center justify-center text-sm font-mono transition-colors rounded-sm",
         disabled
           ? "cursor-default text-muted-foreground"
-          : "hover:bg-muted/50",
+          : "cursor-pointer hover:bg-muted/50",
         saving && "opacity-50",
-        hours > 0 ? "font-medium" : "text-muted-foreground/30"
+        hours > 0 ? "font-medium" : "text-muted-foreground/20"
       )}
       tabIndex={disabled ? -1 : 0}
       onKeyDown={(e) => {
