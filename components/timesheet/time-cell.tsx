@@ -1,22 +1,34 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useImperativeHandle, forwardRef } from "react"
 import { cn } from "@/lib/utils"
 
-export function TimeCell({
-  hours,
-  onSave,
-  disabled,
-  saving,
-}: {
-  hours: number
-  onSave: (hours: number) => void
-  disabled: boolean
-  saving: boolean
-}) {
+export type TimeCellRef = {
+  focus: () => void
+}
+
+export const TimeCell = forwardRef<
+  TimeCellRef,
+  {
+    hours: number
+    onSave: (hours: number) => void
+    onTab?: () => void
+    disabled: boolean
+    saving: boolean
+  }
+>(function TimeCell({ hours, onSave, onTab, disabled, saving }, ref) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
+
+  useImperativeHandle(ref, () => ({
+    focus() {
+      if (disabled) return
+      setValue(hours > 0 ? String(hours) : "")
+      setEditing(true)
+      setTimeout(() => inputRef.current?.select(), 0)
+    },
+  }), [disabled, hours])
 
   const startEditing = useCallback(() => {
     if (disabled) return
@@ -45,9 +57,13 @@ export function TimeCell({
         commitValue()
       } else if (e.key === "Escape") {
         setEditing(false)
+      } else if (e.key === "Tab" && !e.shiftKey && onTab) {
+        e.preventDefault()
+        commitValue()
+        onTab()
       }
     },
-    [commitValue]
+    [commitValue, onTab]
   )
 
   if (editing) {
@@ -89,4 +105,4 @@ export function TimeCell({
       {hours > 0 ? hours : "\u00B7"}
     </div>
   )
-}
+})

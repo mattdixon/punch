@@ -81,7 +81,10 @@ export async function saveTimeEntry(data: {
 }) {
   const session = await requireAuth()
   const userId = session.user.id
-  const week = getWeekString(new Date(data.date))
+  // Parse date as local to avoid timezone shift (e.g. "2026-02-23" → Feb 23 local, not Feb 22 UTC-7)
+  const [y, m, d] = data.date.split("-").map(Number)
+  const entryDate = new Date(y, m - 1, d)
+  const week = getWeekString(entryDate)
 
   // Check if timecard is locked
   const timecard = await prisma.timecard.findUnique({
@@ -90,8 +93,6 @@ export async function saveTimeEntry(data: {
   if (timecard && timecard.status !== "OPEN") {
     throw new Error("Timecard is locked")
   }
-
-  const entryDate = new Date(data.date + "T00:00:00.000Z")
 
   if (data.hours <= 0) {
     // Delete entry if hours is 0 or negative

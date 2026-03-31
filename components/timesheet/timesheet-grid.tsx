@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useCallback, Fragment } from "react"
-import { TimeCell } from "./time-cell"
+import { useState, useCallback, useRef, Fragment } from "react"
+import { TimeCell, TimeCellRef } from "./time-cell"
 import { saveTimeEntry } from "@/app/actions/timesheet"
 import { toast } from "sonner"
 import { MessageSquareText, ChevronDown } from "lucide-react"
@@ -58,6 +58,9 @@ export function TimesheetGrid({
   const [saving, setSaving] = useState<Record<string, boolean>>({})
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({})
   const [editingNote, setEditingNote] = useState<string | null>(null)
+
+  // Refs for tab navigation: time cells keyed by "projectId:date"
+  const timeCellRefs = useRef<Record<string, TimeCellRef | null>>({})
 
   const getHours = useCallback(
     (projectId: string, date: string) => {
@@ -161,6 +164,44 @@ export function TimesheetGrid({
     [localNotes, localEntries]
   )
 
+  // Tab from time cell → open notes row + focus note for same day
+  const handleTimeCellTab = useCallback(
+    (projectId: string, date: string) => {
+      // Expand notes row if collapsed
+      setExpandedNotes((prev) => ({ ...prev, [projectId]: true }))
+      // Set editing note for this cell
+      setEditingNote(`${projectId}:${date}`)
+    },
+    []
+  )
+
+  // Tab from note → focus next day's time cell (or next project's Mon if on Sun)
+  const handleNoteTab = useCallback(
+    (projectId: string, dayIndex: number) => {
+      if (dayIndex < days.length - 1) {
+        // Next day, same project
+        const nextDate = days[dayIndex + 1].date
+        const ref = timeCellRefs.current[`${projectId}:${nextDate}`]
+        if (ref) {
+          setTimeout(() => ref.focus(), 0)
+        }
+      } else {
+        // Last day (Sun) → find next project's first day (Mon)
+        const allProjects = assignments
+        const idx = allProjects.findIndex((a) => a.projectId === projectId)
+        if (idx < allProjects.length - 1) {
+          const nextProject = allProjects[idx + 1]
+          const firstDate = days[0].date
+          const ref = timeCellRefs.current[`${nextProject.projectId}:${firstDate}`]
+          if (ref) {
+            setTimeout(() => ref.focus(), 0)
+          }
+        }
+      }
+    },
+    [days, assignments]
+  )
+
   // Group assignments by client
   const grouped: { clientName: string; projects: Assignment[] }[] = []
   let currentClient = ""
@@ -260,6 +301,7 @@ export function TimesheetGrid({
                     {days.map((d) => {
                       const h = getHours(project.projectId, d.date)
                       const n = getNotes(project.projectId, d.date)
+                      const cellKey = `${project.projectId}:${d.date}`
                       return (
                         <div
                           key={d.date}
@@ -269,14 +311,14 @@ export function TimesheetGrid({
                           )}
                         >
                           <TimeCell
+                            ref={(el) => { timeCellRefs.current[cellKey] = el }}
                             hours={h}
                             onSave={(hours) =>
                               handleSave(project.projectId, d.date, hours)
                             }
+                            onTab={() => handleTimeCellTab(project.projectId, d.date)}
                             disabled={locked}
-                            saving={
-                              saving[`${project.projectId}:${d.date}`] ?? false
-                            }
+                            saving={saving[cellKey] ?? false}
                           />
                         </div>
                       )
@@ -295,7 +337,7 @@ export function TimesheetGrid({
                           onClick={() => toggleNotes(project.projectId)}
                         />
                       </div>
-                      {days.map((d) => {
+                      {days.map((d, dayIndex) => {
                         const key = `${project.projectId}:${d.date}`
                         const n = getNotes(project.projectId, d.date)
                         const h = getHours(project.projectId, d.date)
@@ -325,6 +367,14 @@ export function TimesheetGrid({
                                       null
                                     handleSaveNotes(project.projectId, d.date, val)
                                     setEditingNote(null)
+                                  } else if (e.key === "Tab" && !e.shiftKey) {
+                                    e.preventDefault()
+                                    const val =
+                                      (e.target as HTMLTextAreaElement).value.trim() ||
+                                      null
+                                    handleSaveNotes(project.projectId, d.date, val)
+                                    setEditingNote(null)
+                                    handleNoteTab(project.projectId, dayIndex)
                                   }
                                 }}
                               />
