@@ -191,6 +191,7 @@ model Token {
 model CompanySettings {
   id                   String   @id @default("default")
   companyName          String   @default("Punch")
+  logoBase64           String?
   defaultPaymentTerms  String   @default("Net 15")
   defaultBillCents     Int      @default(0)
   defaultPayCents      Int      @default(0)

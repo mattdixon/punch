@@ -5,6 +5,7 @@
 **Product Name:** Punch (working name)
 **Version:** 1.0
 **Target Users:** Small agencies (5-20 people)
+**Multi-tenant:** Yes — one deployment serves multiple organizations, each fully isolated
 **Problem:** Harvest is $100+/month, clunky UI, poor QuickBooks integration
 **Solution:** Simple, fast time tracking with clean export for external invoicing
 
@@ -25,13 +26,36 @@
 - SSO/SAML enterprise features
 - Real-time collaboration features
 - Integrations beyond CSV export (QuickBooks API is stretch goal)
+- Cross-organization data sharing or collaboration
 
 ---
 
-## User Roles
+## Multi-Tenancy
 
-### Admin
-- Full access to all features
+Punch supports multiple organizations on a single deployment. Each organization is fully isolated — users, clients, projects, time entries, and settings are scoped to one organization.
+
+### Architecture
+
+- **Shared database, row-level isolation** — all organizations share one PostgreSQL database. Every tenant-scoped table has an `orgId` foreign key.
+- **Organization model** — replaces the singleton `CompanySettings`. Each org has its own name, logo, default rates, and settings.
+- **Every query filters by `orgId`** — enforced at the data access layer to prevent cross-tenant data leaks.
+
+### Organization Lifecycle
+
+1. **Sign up** — a new user creates an account and an organization. They become the Owner.
+2. **Invite** — the Owner or Admin invites team members via email. Invitations are scoped to the org.
+3. **One user, one org** — a user belongs to exactly one organization (keeps things simple).
+
+### Roles
+
+**Owner** (one per organization)
+- Everything an Admin can do
+- Manage billing/subscription (future)
+- Delete the organization
+- Transfer ownership
+
+**Admin**
+- Full access to all features within their org
 - Create/manage clients, projects, team members
 - Set pay rates and bill rates
 - Approve timecards
@@ -39,12 +63,23 @@
 - Export data
 - View all time entries
 
-### Team Member
+**Team Member (Member)**
 - Log time to assigned projects
 - View own time entries
 - Submit week for approval
 - Cannot see other team members' time
 - Cannot see pay/bill rates (only their assignments)
+
+### Data Isolation
+
+Every tenant-scoped model gets an `orgId` field:
+- User, Client, Project, ProjectAssignment, TimeEntry, Timecard
+
+**Requirements:**
+- All database queries MUST filter by the current user's `orgId`
+- Server actions must verify the resource belongs to the user's org before any read or write
+- Invitation tokens are scoped to an org
+- Email uniqueness is global (a user can't exist in two orgs with the same email)
 
 ---
 
@@ -144,7 +179,24 @@
 - Bulk approve multiple timecards
 - Cannot edit time entries once Approved or Invoiced
 
-### 6. Export
+### 6. Company Logo
+
+**Upload:**
+- Admin can upload a company logo in Settings
+- Accepts PNG, JPG, SVG (max 2MB)
+- Stored as a base64 data URL in CompanySettings
+
+**Display:**
+- Shown in the sidebar header alongside or in place of the company name
+- When expanded: logo + company name
+- When collapsed: logo only (falls back to first letter of company name if no logo)
+
+**Requirements:**
+- Only Admins can upload/change the logo
+- Preview before saving
+- Option to remove the logo
+
+### 7. Export
 
 **CSV Export**
 - Filter by: date range, client, project, user, timecard status
