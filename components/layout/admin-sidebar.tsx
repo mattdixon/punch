@@ -37,7 +37,6 @@ const navItems = [
     label: "Audit Log",
     href: "/admin/audit",
     icon: ScrollText,
-    disabled: true,
   },
   {
     label: "Stats",

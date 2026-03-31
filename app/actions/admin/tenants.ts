@@ -3,6 +3,7 @@
 import { requireSuperAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { logAdminAction } from "@/lib/audit"
 import type { OrgStatus } from "@prisma/client"
 
 export async function listOrganizations(filters?: {
@@ -93,16 +94,23 @@ export async function updateOrganizationStatus(
   orgId: string,
   status: OrgStatus
 ) {
-  await requireSuperAdmin()
+  const { user } = await requireSuperAdmin()
 
   const org = await prisma.organization.findUnique({ where: { id: orgId } })
   if (!org) {
     throw new Error("Organization not found")
   }
 
+  const previousStatus = org.status
+
   await prisma.organization.update({
     where: { id: orgId },
     data: { status },
+  })
+
+  await logAdminAction(user.id, `${status}_ORG`, "Organization", orgId, {
+    orgName: org.companyName,
+    previousStatus,
   })
 
   revalidatePath("/admin/tenants")
@@ -113,7 +121,7 @@ export async function updateOrganization(
   orgId: string,
   data: { companyName: string }
 ) {
-  await requireSuperAdmin()
+  const { user } = await requireSuperAdmin()
 
   if (!data.companyName.trim()) {
     throw new Error("Company name is required")
@@ -127,6 +135,11 @@ export async function updateOrganization(
   await prisma.organization.update({
     where: { id: orgId },
     data: { companyName: data.companyName.trim() },
+  })
+
+  await logAdminAction(user.id, "UPDATE_ORG", "Organization", orgId, {
+    orgName: data.companyName.trim(),
+    previousName: org.companyName,
   })
 
   revalidatePath("/admin/tenants")

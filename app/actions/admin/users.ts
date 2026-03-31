@@ -3,6 +3,7 @@
 import { requireSuperAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcryptjs"
+import { logAdminAction } from "@/lib/audit"
 import { revalidatePath } from "next/cache"
 import { createToken } from "@/lib/tokens"
 import { sendEmail, isEmailConfigured } from "@/lib/email"
@@ -114,7 +115,7 @@ export async function getUserDetail(userId: string) {
 export async function adminResetPassword(
   userId: string
 ): Promise<{ tempPassword?: string; emailSent?: boolean }> {
-  await requireSuperAdmin()
+  const { user: admin } = await requireSuperAdmin()
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -133,6 +134,10 @@ export async function adminResetPassword(
       react: ResetEmail({ name: user.name, resetUrl }),
     })
 
+    await logAdminAction(admin.id, "RESET_PASSWORD", "User", userId, {
+      userName: user.name, userEmail: user.email, method: "email",
+    })
+
     return { emailSent: true }
   }
 
@@ -142,6 +147,10 @@ export async function adminResetPassword(
   await prisma.user.update({
     where: { id: userId },
     data: { passwordHash },
+  })
+
+  await logAdminAction(admin.id, "RESET_PASSWORD", "User", userId, {
+    userName: user.name, userEmail: user.email, method: "temp_password",
   })
 
   return { tempPassword }
@@ -162,12 +171,16 @@ export async function adminArchiveUser(userId: string) {
     data: { archivedAt: new Date() },
   })
 
+  await logAdminAction(user.id, "ARCHIVE_USER", "User", userId, {
+    userName: targetUser.name, userEmail: targetUser.email,
+  })
+
   revalidatePath("/admin/users")
   revalidatePath(`/admin/users/${userId}`)
 }
 
 export async function adminRestoreUser(userId: string) {
-  await requireSuperAdmin()
+  const { user } = await requireSuperAdmin()
 
   const targetUser = await prisma.user.findUnique({ where: { id: userId } })
   if (!targetUser) throw new Error("User not found")
@@ -175,6 +188,10 @@ export async function adminRestoreUser(userId: string) {
   await prisma.user.update({
     where: { id: userId },
     data: { archivedAt: null },
+  })
+
+  await logAdminAction(user.id, "RESTORE_USER", "User", userId, {
+    userName: targetUser.name, userEmail: targetUser.email,
   })
 
   revalidatePath("/admin/users")
@@ -191,10 +208,20 @@ export async function adminToggleSuperAdmin(userId: string) {
   const targetUser = await prisma.user.findUnique({ where: { id: userId } })
   if (!targetUser) throw new Error("User not found")
 
+  const newValue = !targetUser.isSuperAdmin
+
   await prisma.user.update({
     where: { id: userId },
-    data: { isSuperAdmin: !targetUser.isSuperAdmin },
+    data: { isSuperAdmin: newValue },
   })
+
+  await logAdminAction(
+    user.id,
+    newValue ? "GRANT_SUPER_ADMIN" : "REVOKE_SUPER_ADMIN",
+    "User",
+    userId,
+    { userName: targetUser.name, userEmail: targetUser.email }
+  )
 
   revalidatePath("/admin/users")
   revalidatePath(`/admin/users/${userId}`)
