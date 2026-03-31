@@ -1,25 +1,14 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-  if (session.user.role !== "ADMIN") {
-    throw new Error("Forbidden")
-  }
-  return session
-}
-
 export async function getProjectWithAssignments(projectId: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
-  return prisma.project.findUnique({
-    where: { id: projectId },
+  return prisma.project.findFirst({
+    where: { id: projectId, orgId: user.orgId },
     include: {
       client: { select: { name: true } },
       assignments: {
@@ -35,7 +24,7 @@ export async function getProjectWithAssignments(projectId: string) {
 }
 
 export async function getUnassignedUsers(projectId: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   const assigned = await prisma.projectAssignment.findMany({
     where: { projectId },
@@ -46,6 +35,7 @@ export async function getUnassignedUsers(projectId: string) {
   return prisma.user.findMany({
     where: {
       archivedAt: null,
+      orgId: user.orgId,
       id: { notIn: assignedIds },
     },
     orderBy: { name: "asc" },
@@ -59,7 +49,19 @@ export async function createAssignment(data: {
   payRateCents: number | null
   billRateCents: number | null
 }) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
+
+  // Verify project belongs to org
+  const project = await prisma.project.findFirst({
+    where: { id: data.projectId, orgId: user.orgId },
+  })
+  if (!project) throw new Error("Project not found")
+
+  // Verify user belongs to org
+  const targetUser = await prisma.user.findFirst({
+    where: { id: data.userId, orgId: user.orgId },
+  })
+  if (!targetUser) throw new Error("User not found")
 
   await prisma.projectAssignment.create({
     data: {
@@ -80,9 +82,15 @@ export async function updateAssignment(
     billRateCents: number | null
   }
 ) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const assignment = await prisma.projectAssignment.update({
+  // Verify assignment belongs to org via project
+  const assignment = await prisma.projectAssignment.findFirst({
+    where: { id, project: { orgId: user.orgId } },
+  })
+  if (!assignment) throw new Error("Assignment not found")
+
+  const updated = await prisma.projectAssignment.update({
     where: { id },
     data: {
       payRateCents: data.payRateCents,
@@ -90,15 +98,21 @@ export async function updateAssignment(
     },
   })
 
-  revalidatePath(`/projects/${assignment.projectId}`)
+  revalidatePath(`/projects/${updated.projectId}`)
 }
 
 export async function removeAssignment(id: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const assignment = await prisma.projectAssignment.delete({
+  // Verify assignment belongs to org via project
+  const assignment = await prisma.projectAssignment.findFirst({
+    where: { id, project: { orgId: user.orgId } },
+  })
+  if (!assignment) throw new Error("Assignment not found")
+
+  const deleted = await prisma.projectAssignment.delete({
     where: { id },
   })
 
-  revalidatePath(`/projects/${assignment.projectId}`)
+  revalidatePath(`/projects/${deleted.projectId}`)
 }

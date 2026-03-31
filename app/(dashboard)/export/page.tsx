@@ -5,7 +5,7 @@ import { getExportFilterOptions } from "@/app/actions/export"
 
 export default async function ExportPage() {
   const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "OWNER") {
     redirect("/timesheet")
   }
 

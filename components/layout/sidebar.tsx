@@ -49,31 +49,31 @@ const navItems = [
     label: "Approvals",
     href: "/approvals",
     icon: CheckSquare,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "OWNER"],
   },
   {
     label: "Clients",
     href: "/clients",
     icon: Briefcase,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "OWNER"],
   },
   {
     label: "Projects",
     href: "/projects",
     icon: FolderOpen,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "OWNER"],
   },
   {
     label: "Team",
     href: "/team",
     icon: Users,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "OWNER"],
   },
   {
     label: "Export",
     href: "/export",
     icon: Download,
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "OWNER"],
   },
 ]
 
@@ -259,7 +259,7 @@ function SidebarContent({
           collapsed={collapsed}
           onClick={onNavigate}
         />
-        {user.role === "ADMIN" && (
+        {(user.role === "ADMIN" || user.role === "OWNER") && (
           <FooterLink
             href="/settings"
             label="Settings"

@@ -5,7 +5,7 @@ import { SettingsForm } from "@/components/settings/settings-form"
 
 export default async function SettingsPage() {
   const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "OWNER") {
     redirect("/timesheet")
   }
 

@@ -5,7 +5,12 @@ import { TimecardStatus } from "@prisma/client"
 
 export async function GET(request: NextRequest) {
   const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
+  if (!session?.user?.id || session?.user?.role !== "ADMIN") {
+    return new Response("Forbidden", { status: 403 })
+  }
+
+  const orgId = (session.user as { orgId?: string }).orgId
+  if (!orgId) {
     return new Response("Forbidden", { status: 403 })
   }
 
@@ -21,7 +26,9 @@ export async function GET(request: NextRequest) {
   const projectId = searchParams.get("projectId")
   const userId = searchParams.get("userId")
 
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = {
+    user: { orgId },
+  }
 
   // Date-based filtering takes precedence over week-based
   if (startDate || endDate) {
@@ -49,7 +56,10 @@ export async function GET(request: NextRequest) {
   // If status filter, only include entries for timecards with that status
   let userWeekFilter: { userId: string; week: string }[] | null = null
   if (status) {
-    const timecardWhere: Record<string, unknown> = { status: status as TimecardStatus }
+    const timecardWhere: Record<string, unknown> = {
+      status: status as TimecardStatus,
+      user: { orgId },
+    }
     if (where.week) {
       timecardWhere.week = where.week
     }
@@ -82,13 +92,13 @@ export async function GET(request: NextRequest) {
     orderBy: [{ week: "asc" }, { date: "asc" }, { user: { name: "asc" } }],
   })
 
-  // Get company settings for rate fallbacks
-  const companySettings = await prisma.companySettings.findUnique({
-    where: { id: "default" },
+  // Get organization settings for rate fallbacks
+  const org = await prisma.organization.findUnique({
+    where: { id: orgId },
   })
-  const companyBillCents = companySettings?.defaultBillCents ?? 0
-  const companyPayCents = companySettings?.defaultPayCents ?? 0
-  const companyPaymentTerms = companySettings?.defaultPaymentTerms ?? "Net 30"
+  const companyBillCents = org?.defaultBillCents ?? 0
+  const companyPayCents = org?.defaultPayCents ?? 0
+  const companyPaymentTerms = org?.defaultPaymentTerms ?? "Net 30"
 
   // Get assignments for rate overrides
   const assignments = await prisma.projectAssignment.findMany({

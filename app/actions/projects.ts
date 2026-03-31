@@ -1,25 +1,14 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-  if (session.user.role !== "ADMIN") {
-    throw new Error("Forbidden")
-  }
-  return session
-}
-
 export async function getProjects(showArchived: boolean = false) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   return prisma.project.findMany({
-    where: showArchived ? {} : { archivedAt: null },
+    where: showArchived ? { orgId: user.orgId } : { archivedAt: null, orgId: user.orgId },
     orderBy: [{ client: { name: "asc" } }, { name: "asc" }],
     include: {
       client: { select: { id: true, name: true } },
@@ -29,10 +18,10 @@ export async function getProjects(showArchived: boolean = false) {
 }
 
 export async function getActiveClients() {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   return prisma.client.findMany({
-    where: { archivedAt: null },
+    where: { archivedAt: null, orgId: user.orgId },
     orderBy: { name: "asc" },
     select: { id: true, name: true },
   })
@@ -44,7 +33,7 @@ export async function createProject(data: {
   defaultBillCents: number
   paymentTerms: string
 }) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   if (!data.name.trim()) {
     throw new Error("Project name is required")
@@ -56,6 +45,7 @@ export async function createProject(data: {
       clientId: data.clientId,
       defaultBillCents: data.defaultBillCents,
       paymentTerms: data.paymentTerms,
+      orgId: user.orgId,
     },
   })
 
@@ -71,14 +61,14 @@ export async function updateProject(
     paymentTerms: string
   }
 ) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   if (!data.name.trim()) {
     throw new Error("Project name is required")
   }
 
   await prisma.project.update({
-    where: { id },
+    where: { id, orgId: user.orgId },
     data: {
       name: data.name.trim(),
       client: { connect: { id: data.clientId } },
@@ -91,10 +81,10 @@ export async function updateProject(
 }
 
 export async function archiveProject(id: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   await prisma.project.update({
-    where: { id },
+    where: { id, orgId: user.orgId },
     data: { archivedAt: new Date() },
   })
 
@@ -102,10 +92,10 @@ export async function archiveProject(id: string) {
 }
 
 export async function restoreProject(id: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   await prisma.project.update({
-    where: { id },
+    where: { id, orgId: user.orgId },
     data: { archivedAt: null },
   })
 

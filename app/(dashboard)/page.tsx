@@ -42,7 +42,7 @@ export default async function DashboardPage() {
   const session = await auth()
   if (!session?.user) redirect("/login")
 
-  const isAdmin = session.user.role === "ADMIN"
+  const isAdmin = session.user.role === "ADMIN" || session.user.role === "OWNER"
 
   if (isAdmin) {
     const data = await getAdminDashboard()

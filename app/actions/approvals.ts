@@ -1,25 +1,14 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-  if (session.user.role !== "ADMIN") {
-    throw new Error("Forbidden")
-  }
-  return session
-}
-
 export async function getPendingTimecards() {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   return prisma.timecard.findMany({
-    where: { status: "SUBMITTED" },
+    where: { status: "SUBMITTED", user: { orgId: user.orgId } },
     include: {
       user: { select: { id: true, name: true, email: true } },
     },
@@ -28,10 +17,10 @@ export async function getPendingTimecards() {
 }
 
 export async function getTimecardDetail(timecardId: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const timecard = await prisma.timecard.findUnique({
-    where: { id: timecardId },
+  const timecard = await prisma.timecard.findFirst({
+    where: { id: timecardId, user: { orgId: user.orgId } },
     include: {
       user: { select: { id: true, name: true, email: true } },
     },
@@ -75,9 +64,11 @@ export async function getTimecardDetail(timecardId: string) {
 }
 
 export async function approveTimecard(timecardId: string) {
-  const session = await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const timecard = await prisma.timecard.findUnique({ where: { id: timecardId } })
+  const timecard = await prisma.timecard.findFirst({
+    where: { id: timecardId, user: { orgId: user.orgId } },
+  })
   if (!timecard) throw new Error("Timecard not found")
   if (timecard.status !== "SUBMITTED") throw new Error("Timecard is not pending approval")
 
@@ -86,7 +77,7 @@ export async function approveTimecard(timecardId: string) {
     data: {
       status: "APPROVED",
       approvedAt: new Date(),
-      approvedById: session.user.id,
+      approvedById: user.id,
     },
   })
 
@@ -94,9 +85,11 @@ export async function approveTimecard(timecardId: string) {
 }
 
 export async function rejectTimecard(timecardId: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const timecard = await prisma.timecard.findUnique({ where: { id: timecardId } })
+  const timecard = await prisma.timecard.findFirst({
+    where: { id: timecardId, user: { orgId: user.orgId } },
+  })
   if (!timecard) throw new Error("Timecard not found")
   if (timecard.status !== "SUBMITTED") throw new Error("Timecard is not pending approval")
 
@@ -112,9 +105,11 @@ export async function rejectTimecard(timecardId: string) {
 }
 
 export async function markInvoiced(timecardId: string) {
-  const session = await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const timecard = await prisma.timecard.findUnique({ where: { id: timecardId } })
+  const timecard = await prisma.timecard.findFirst({
+    where: { id: timecardId, user: { orgId: user.orgId } },
+  })
   if (!timecard) throw new Error("Timecard not found")
   if (timecard.status !== "APPROVED") throw new Error("Timecard must be approved first")
 
@@ -123,7 +118,7 @@ export async function markInvoiced(timecardId: string) {
     data: {
       status: "INVOICED",
       invoicedAt: new Date(),
-      invoicedById: session.user.id,
+      invoicedById: user.id,
     },
   })
 
@@ -131,10 +126,10 @@ export async function markInvoiced(timecardId: string) {
 }
 
 export async function getApprovedTimecards() {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   return prisma.timecard.findMany({
-    where: { status: "APPROVED" },
+    where: { status: "APPROVED", user: { orgId: user.orgId } },
     include: {
       user: { select: { id: true, name: true, email: true } },
     },
