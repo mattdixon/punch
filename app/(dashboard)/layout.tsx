@@ -15,6 +15,16 @@ export default async function DashboardLayout({
     redirect("/login")
   }
 
+  // Super admin without an org should go to admin console
+  if (!session.user.orgId && session.user.isSuperAdmin) {
+    redirect("/admin")
+  }
+
+  // User without an org who isn't a super admin shouldn't be here
+  if (!session.user.orgId) {
+    redirect("/login")
+  }
+
   const settings = await getCompanySettings()
 
   return (

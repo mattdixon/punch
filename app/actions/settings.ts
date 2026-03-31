@@ -1,11 +1,11 @@
 "use server"
 
-import { requireAdmin, requireAuth } from "@/app/actions/_auth-helpers"
+import { requireAdmin, requireOrgAuth } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
 export async function getCompanySettings() {
-  const { user } = await requireAuth()
+  const { user } = await requireOrgAuth()
 
   const org = await prisma.organization.findUnique({
     where: { id: user.orgId },

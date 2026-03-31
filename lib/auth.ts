@@ -20,6 +20,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         const user = await prisma.user.findUnique({
           where: { email },
+          include: { organization: true },
         })
 
         if (!user || user.archivedAt) {
@@ -27,6 +28,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         if (!user.passwordHash) {
+          return null
+        }
+
+        // Block login if the user's org is suspended or deleted (unless super admin)
+        if (user.organization && user.organization.status !== "ACTIVE" && !user.isSuperAdmin) {
           return null
         }
 
@@ -41,6 +47,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           name: user.name,
           role: user.role,
           orgId: user.orgId,
+          isSuperAdmin: user.isSuperAdmin,
         }
       },
     }),
@@ -56,7 +63,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.id = user.id!
         token.role = (user as { role: string }).role
-        token.orgId = (user as { orgId: string }).orgId
+        token.orgId = (user as { orgId: string | null }).orgId
+        token.isSuperAdmin = (user as { isSuperAdmin: boolean }).isSuperAdmin
       }
       return token
     },
@@ -64,7 +72,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (session.user) {
         session.user.id = token.id as string
         session.user.role = token.role as string
-        session.user.orgId = token.orgId as string
+        session.user.orgId = token.orgId as string | null
+        session.user.isSuperAdmin = token.isSuperAdmin as boolean
       }
       return session
     },
