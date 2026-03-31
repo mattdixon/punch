@@ -76,3 +76,32 @@ export async function updateCompanySettings(data: {
   revalidatePath("/settings")
   revalidatePath("/", "layout")
 }
+
+const MAX_LOGO_SIZE = 2 * 1024 * 1024 // 2MB
+const ALLOWED_MIME_TYPES = ["image/png", "image/jpeg", "image/svg+xml"]
+
+export async function updateCompanyLogo(dataUrl: string | null) {
+  await requireAdmin()
+
+  if (dataUrl !== null) {
+    const match = dataUrl.match(/^data:(image\/(png|jpeg|svg\+xml));base64,/)
+    if (!match) {
+      throw new Error("Invalid image format. Use PNG, JPG, or SVG.")
+    }
+
+    const base64Data = dataUrl.slice(dataUrl.indexOf(",") + 1)
+    const sizeInBytes = Math.ceil(base64Data.length * 0.75)
+    if (sizeInBytes > MAX_LOGO_SIZE) {
+      throw new Error("Logo must be under 2MB.")
+    }
+  }
+
+  await prisma.companySettings.upsert({
+    where: { id: "default" },
+    update: { logoBase64: dataUrl },
+    create: { id: "default", logoBase64: dataUrl },
+  })
+
+  revalidatePath("/settings")
+  revalidatePath("/", "layout")
+}

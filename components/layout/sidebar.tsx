@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -82,6 +83,7 @@ interface SidebarProps {
     role: string
   }
   companyName?: string
+  logoBase64?: string | null
 }
 
 function NavLink({
@@ -171,6 +173,7 @@ function FooterLink({
 function SidebarContent({
   user,
   companyName,
+  logoBase64,
   collapsed,
   onToggle,
   onNavigate,
@@ -191,16 +194,23 @@ function SidebarContent({
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link href="/" className="text-lg font-bold">
-                P
+              <Link href="/" className="flex items-center justify-center">
+                {logoBase64 ? (
+                  <Image src={logoBase64} alt={companyName || "Logo"} width={28} height={28} className="object-contain" />
+                ) : (
+                  <span className="text-lg font-bold">{(companyName || "Punch")[0]}</span>
+                )}
               </Link>
             </TooltipTrigger>
             <TooltipContent side="right">{companyName || "Punch"}</TooltipContent>
           </Tooltip>
         ) : (
           <>
-            <Link href="/" className="text-xl font-bold">
-              {companyName || "Punch"}
+            <Link href="/" className="flex items-center gap-2">
+              {logoBase64 && (
+                <Image src={logoBase64} alt={companyName || "Logo"} width={28} height={28} className="object-contain" />
+              )}
+              <span className="text-xl font-bold">{companyName || "Punch"}</span>
             </Link>
             {onToggle && (
               <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground" onClick={onToggle}>

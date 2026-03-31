@@ -18,8 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { updateCompanySettings } from "@/app/actions/settings"
+import { cn } from "@/lib/utils"
+import { updateCompanySettings, updateCompanyLogo } from "@/app/actions/settings"
 import { toast } from "sonner"
+import Image from "next/image"
 
 const PAYMENT_TERMS_OPTIONS = [
   "Due on receipt",
@@ -54,6 +56,7 @@ const MONTH_OPTIONS = [
 type CompanySettings = {
   id: string
   companyName: string
+  logoBase64: string | null
   defaultPaymentTerms: string
   defaultBillCents: number
   defaultPayCents: number
@@ -63,6 +66,8 @@ type CompanySettings = {
 
 export function SettingsForm({ settings }: { settings: CompanySettings }) {
   const [saving, setSaving] = useState(false)
+  const [savingLogo, setSavingLogo] = useState(false)
+  const [logoPreview, setLogoPreview] = useState<string | null>(settings.logoBase64)
   const [companyName, setCompanyName] = useState(settings.companyName)
   const [paymentTerms, setPaymentTerms] = useState(settings.defaultPaymentTerms)
   const [billRate, setBillRate] = useState(
@@ -114,6 +119,95 @@ export function SettingsForm({ settings }: { settings: CompanySettings }) {
             />
             <p className="text-xs text-muted-foreground">
               Shown in the sidebar header.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Company Logo</Label>
+            <div className="flex items-center gap-4">
+              {logoPreview ? (
+                <div className="relative h-16 w-16 rounded-md border overflow-hidden bg-white flex items-center justify-center">
+                  <Image
+                    src={logoPreview}
+                    alt="Company logo"
+                    width={64}
+                    height={64}
+                    className="object-contain"
+                  />
+                </div>
+              ) : (
+                <div className="h-16 w-16 rounded-md border border-dashed flex items-center justify-center text-muted-foreground text-xs">
+                  No logo
+                </div>
+              )}
+              <div className="flex flex-col gap-2">
+                <label>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/svg+xml"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+
+                      if (file.size > 2 * 1024 * 1024) {
+                        toast.error("Logo must be under 2MB")
+                        return
+                      }
+
+                      const reader = new FileReader()
+                      reader.onload = async () => {
+                        const dataUrl = reader.result as string
+                        setLogoPreview(dataUrl)
+                        setSavingLogo(true)
+                        try {
+                          await updateCompanyLogo(dataUrl)
+                          toast.success("Logo updated")
+                        } catch (err) {
+                          toast.error(err instanceof Error ? err.message : "Failed to upload logo")
+                          setLogoPreview(settings.logoBase64)
+                        } finally {
+                          setSavingLogo(false)
+                        }
+                      }
+                      reader.readAsDataURL(file)
+                    }}
+                  />
+                  <span className={cn(
+                    "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors",
+                    "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+                    "h-9 px-3 cursor-pointer",
+                    savingLogo && "opacity-50 pointer-events-none"
+                  )}>
+                    {savingLogo ? "Uploading..." : "Upload Logo"}
+                  </span>
+                </label>
+                {logoPreview && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive h-auto p-0 text-xs"
+                    disabled={savingLogo}
+                    onClick={async () => {
+                      setSavingLogo(true)
+                      try {
+                        await updateCompanyLogo(null)
+                        setLogoPreview(null)
+                        toast.success("Logo removed")
+                      } catch (err) {
+                        toast.error(err instanceof Error ? err.message : "Failed to remove logo")
+                      } finally {
+                        setSavingLogo(false)
+                      }
+                    }}
+                  >
+                    Remove logo
+                  </Button>
+                )}
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              PNG, JPG, or SVG. Max 2MB. Shown in the sidebar.
             </p>
           </div>
           <div className="space-y-2">
