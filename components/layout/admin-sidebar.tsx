@@ -8,14 +8,8 @@ import {
   Building2,
   Users,
   ScrollText,
-  BarChart3,
   ArrowLeft,
 } from "lucide-react"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 
 const navItems = [
   {
@@ -37,12 +31,6 @@ const navItems = [
     label: "Audit Log",
     href: "/admin/audit",
     icon: ScrollText,
-  },
-  {
-    label: "Stats",
-    href: "/admin/stats",
-    icon: BarChart3,
-    disabled: true,
   },
 ]
 
@@ -70,22 +58,6 @@ export function AdminSidebar({ user }: AdminSidebarProps) {
             item.href === "/admin"
               ? pathname === "/admin"
               : pathname.startsWith(item.href)
-
-          if (item.disabled) {
-            return (
-              <Tooltip key={item.href}>
-                <TooltipTrigger asChild>
-                  <span
-                    className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground/50 cursor-not-allowed"
-                  >
-                    <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="right">Coming soon</TooltipContent>
-              </Tooltip>
-            )
-          }
 
           return (
             <Link
