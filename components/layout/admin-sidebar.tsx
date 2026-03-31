@@ -32,7 +32,6 @@ const navItems = [
     label: "Users",
     href: "/admin/users",
     icon: Users,
-    disabled: true,
   },
   {
     label: "Audit Log",
