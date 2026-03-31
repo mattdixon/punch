@@ -30,13 +30,14 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog"
-import { ArrowLeft, Shield } from "lucide-react"
+import { ArrowLeft, Shield, LogIn } from "lucide-react"
 import {
   adminResetPassword,
   adminArchiveUser,
   adminRestoreUser,
   adminToggleSuperAdmin,
 } from "@/app/actions/admin/users"
+import { startImpersonation } from "@/app/actions/admin/impersonation"
 import { toast } from "sonner"
 
 type UserDetail = {
@@ -148,6 +149,18 @@ export function AdminUserDetail({ user }: { user: UserDetail }) {
           <p className="text-muted-foreground">{user.email}</p>
         </div>
         <div className="flex gap-2">
+          {!user.isArchived && user.org && (
+            <form action={() => startImpersonation(user.id)}>
+              <Button
+                type="submit"
+                variant="outline"
+                size="sm"
+              >
+                <LogIn className="mr-2 h-3.5 w-3.5" />
+                Login As
+              </Button>
+            </form>
+          )}
           <Button
             variant="outline"
             size="sm"

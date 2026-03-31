@@ -31,8 +31,9 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog"
-import { ArrowLeft, Building2, Users, FolderOpen, Briefcase } from "lucide-react"
+import { ArrowLeft, Building2, Users, FolderOpen, Briefcase, LogIn } from "lucide-react"
 import { updateOrganizationStatus, updateOrganization } from "@/app/actions/admin/tenants"
+import { startImpersonation } from "@/app/actions/admin/impersonation"
 import { toast } from "sonner"
 import Link from "next/link"
 
@@ -267,6 +268,7 @@ export function TenantDetail({ org }: { org: OrgDetail }) {
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Joined</TableHead>
+                <TableHead className="w-[80px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -286,6 +288,15 @@ export function TenantDetail({ org }: { org: OrgDetail }) {
                   </TableCell>
                   <TableCell className="text-muted-foreground">
                     {new Date(user.createdAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell>
+                    {!user.isArchived && (
+                      <form action={() => startImpersonation(user.id)}>
+                        <Button type="submit" variant="ghost" size="icon" title="Login as this user">
+                          <LogIn className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

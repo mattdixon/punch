@@ -2,6 +2,9 @@ import NextAuth from "next-auth"
 import Credentials from "next-auth/providers/credentials"
 import { compare } from "bcryptjs"
 import { prisma } from "@/lib/prisma"
+import { cookies } from "next/headers"
+
+const IMPERSONATION_COOKIE = "punch_impersonate"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
@@ -74,8 +77,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as string
         session.user.orgId = token.orgId as string | null
         session.user.isSuperAdmin = token.isSuperAdmin as boolean
+
+        // Check for impersonation cookie
+        try {
+          const cookieStore = await cookies()
+          const impersonateCookie = cookieStore.get(IMPERSONATION_COOKIE)
+
+          if (impersonateCookie?.value && token.isSuperAdmin) {
+            const targetUser = await prisma.user.findUnique({
+              where: { id: impersonateCookie.value },
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+                orgId: true,
+              },
+            })
+
+            if (targetUser) {
+              session.user.realAdminId = token.id as string
+              session.user.isImpersonating = true
+              session.user.id = targetUser.id
+              session.user.name = targetUser.name
+              session.user.email = targetUser.email
+              session.user.role = targetUser.role
+              session.user.orgId = targetUser.orgId
+              // Keep isSuperAdmin false for the impersonated view
+              session.user.isSuperAdmin = false
+            }
+          }
+        } catch {
+          // cookies() may throw in certain contexts (e.g., API routes)
+        }
       }
       return session
     },
   },
 })
+
+export { IMPERSONATION_COOKIE }

@@ -8,6 +8,8 @@ declare module "next-auth" {
       role: string
       orgId: string | null
       isSuperAdmin: boolean
+      isImpersonating?: boolean
+      realAdminId?: string | null
     } & DefaultSession["user"]
   }
 
@@ -24,5 +26,7 @@ declare module "next-auth/jwt" {
     role: string
     orgId: string | null
     isSuperAdmin: boolean
+    isImpersonating?: boolean
+    realAdminId?: string | null
   }
 }
