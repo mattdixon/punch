@@ -4,12 +4,12 @@ import { hash } from "bcryptjs"
 const prisma = new PrismaClient()
 
 async function main() {
-  await prisma.companySettings.upsert({
-    where: { id: "default" },
+  const org = await prisma.organization.upsert({
+    where: { slug: "punch-demo" },
     update: {},
     create: {
-      id: "default",
       companyName: "Punch",
+      slug: "punch-demo",
       defaultPaymentTerms: "Net 15",
       defaultBillCents: 15000,
       defaultPayCents: 5000,
@@ -25,8 +25,9 @@ async function main() {
       email: "admin@punch.local",
       passwordHash: await hash("password123", 12),
       name: "Admin User",
-      role: "ADMIN",
+      role: "OWNER",
       defaultPayCents: 0,
+      orgId: org.id,
     },
   })
 
@@ -39,17 +40,19 @@ async function main() {
       name: "Jane Smith",
       role: "MEMBER",
       defaultPayCents: 5000,
+      orgId: org.id,
     },
   })
 
   const client = await prisma.client.create({
-    data: { name: "Acme Corp" },
+    data: { name: "Acme Corp", orgId: org.id },
   })
 
   const project = await prisma.project.create({
     data: {
       name: "Website Redesign",
       clientId: client.id,
+      orgId: org.id,
       defaultBillCents: 15000,
     },
   })
@@ -70,7 +73,7 @@ async function main() {
     },
   })
 
-  console.log("Seed complete:", { admin: admin.email, member: member.email })
+  console.log("Seed complete:", { org: org.slug, admin: admin.email, member: member.email })
 }
 
 main()

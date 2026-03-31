@@ -1,20 +1,12 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { requireAuth, requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { getWeekString } from "@/lib/utils"
 
-async function requireAuth() {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-  return session
-}
-
 export async function getMemberDashboard() {
-  const session = await requireAuth()
-  const userId = session.user.id
+  const { user } = await requireAuth()
+  const userId = user.id
   const week = getWeekString(new Date())
 
   const [entries, timecard] = await Promise.all([
@@ -41,19 +33,16 @@ export async function getMemberDashboard() {
 }
 
 export async function getAdminDashboard() {
-  const session = await requireAuth()
-  if (session.user.role !== "ADMIN") {
-    throw new Error("Forbidden")
-  }
+  const { user } = await requireAdmin()
 
   const week = getWeekString(new Date())
 
   const [pendingCount, entries] = await Promise.all([
     prisma.timecard.count({
-      where: { status: "SUBMITTED" },
+      where: { status: "SUBMITTED", user: { orgId: user.orgId } },
     }),
     prisma.timeEntry.findMany({
-      where: { week },
+      where: { week, user: { orgId: user.orgId } },
       select: { hours: true },
     }),
   ])

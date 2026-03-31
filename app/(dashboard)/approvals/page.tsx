@@ -9,7 +9,7 @@ import { ApprovalsList } from "@/components/approvals/approvals-list"
 
 export default async function ApprovalsPage() {
   const session = await auth()
-  if (session?.user?.role !== "ADMIN") {
+  if (session?.user?.role !== "ADMIN" && session?.user?.role !== "OWNER") {
     redirect("/timesheet")
   }
 

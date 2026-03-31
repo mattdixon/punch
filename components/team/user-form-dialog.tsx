@@ -25,7 +25,7 @@ type User = {
   id: string
   name: string
   email: string
-  role: "ADMIN" | "MEMBER"
+  role: "OWNER" | "ADMIN" | "MEMBER"
   defaultPayCents: number
 }
 
@@ -50,7 +50,7 @@ export function UserFormDialog({
   const [saving, setSaving] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
   const [email, setEmail] = useState(user?.email ?? "")
-  const [role, setRole] = useState<"ADMIN" | "MEMBER">(user?.role ?? "MEMBER")
+  const [role, setRole] = useState<"OWNER" | "ADMIN" | "MEMBER">(user?.role ?? "MEMBER")
   const [payRate, setPayRate] = useState(
     user
       ? (user.defaultPayCents / 100).toFixed(2)
@@ -131,7 +131,7 @@ export function UserFormDialog({
           </div>
           <div className="space-y-2">
             <Label htmlFor="role">Role</Label>
-            <Select value={role} onValueChange={(v) => setRole(v as "ADMIN" | "MEMBER")}>
+            <Select value={role} onValueChange={(v) => setRole(v as "OWNER" | "ADMIN" | "MEMBER")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

@@ -1,32 +1,25 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { TimecardStatus } from "@prisma/client"
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) throw new Error("Unauthorized")
-  if (session.user.role !== "ADMIN") throw new Error("Forbidden")
-  return session
-}
-
 export async function getExportFilterOptions() {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   const [clients, projects, users] = await Promise.all([
     prisma.client.findMany({
-      where: { archivedAt: null },
+      where: { archivedAt: null, orgId: user.orgId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
     prisma.project.findMany({
-      where: { archivedAt: null },
+      where: { archivedAt: null, orgId: user.orgId },
       select: { id: true, name: true, clientId: true },
       orderBy: { name: "asc" },
     }),
     prisma.user.findMany({
-      where: { archivedAt: null },
+      where: { archivedAt: null, orgId: user.orgId },
       select: { id: true, name: true },
       orderBy: { name: "asc" },
     }),
@@ -45,9 +38,11 @@ export async function getExportPreview(params: {
   projectId?: string
   userId?: string
 }) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
-  const where: Record<string, unknown> = {}
+  const where: Record<string, unknown> = {
+    user: { orgId: user.orgId },
+  }
 
   if (params.startDate || params.endDate) {
     const dateFilter: Record<string, Date> = {}
@@ -75,6 +70,7 @@ export async function getExportPreview(params: {
   if (params.status && params.status !== "ALL") {
     const timecardWhere: Record<string, unknown> = {
       status: params.status as TimecardStatus,
+      user: { orgId: user.orgId },
     }
     if (where.week) timecardWhere.week = where.week
     if (params.userId) timecardWhere.userId = params.userId

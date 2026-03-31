@@ -1,6 +1,6 @@
 "use server"
 
-import { auth } from "@/lib/auth"
+import { requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcryptjs"
 import { revalidatePath } from "next/cache"
@@ -19,22 +19,11 @@ function generateTempPassword(): string {
   return password
 }
 
-async function requireAdmin() {
-  const session = await auth()
-  if (!session?.user) {
-    throw new Error("Unauthorized")
-  }
-  if (session.user.role !== "ADMIN") {
-    throw new Error("Forbidden")
-  }
-  return session
-}
-
 export async function getUsers(showArchived: boolean = false) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   return prisma.user.findMany({
-    where: showArchived ? {} : { archivedAt: null },
+    where: showArchived ? { orgId: user.orgId } : { archivedAt: null, orgId: user.orgId },
     orderBy: { name: "asc" },
     select: {
       id: true,
@@ -51,10 +40,10 @@ export async function getUsers(showArchived: boolean = false) {
 export async function createUser(data: {
   name: string
   email: string
-  role: "ADMIN" | "MEMBER"
+  role: "OWNER" | "ADMIN" | "MEMBER"
   defaultPayCents: number
 }): Promise<{ tempPassword?: string; emailSent?: boolean }> {
-  await requireAdmin()
+  const { user } = await requireAdmin()
 
   const existing = await prisma.user.findUnique({
     where: { email: data.email },
@@ -64,16 +53,17 @@ export async function createUser(data: {
   }
 
   if (isEmailConfigured()) {
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
         role: data.role,
         defaultPayCents: data.defaultPayCents,
+        orgId: user.orgId,
       },
     })
 
-    const rawToken = await createToken(user.id, "INVITE")
+    const rawToken = await createToken(newUser.id, "INVITE")
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
     const inviteUrl = `${baseUrl}/set-password?token=${rawToken}&type=invite`
     const settings = await getCompanySettings()
@@ -103,6 +93,7 @@ export async function createUser(data: {
       role: data.role,
       defaultPayCents: data.defaultPayCents,
       passwordHash,
+      orgId: user.orgId,
     },
   })
 
@@ -115,11 +106,17 @@ export async function updateUser(
   data: {
     name: string
     email: string
-    role: "ADMIN" | "MEMBER"
+    role: "OWNER" | "ADMIN" | "MEMBER"
     defaultPayCents: number
   }
 ) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
+
+  // Verify user belongs to org
+  const targetUser = await prisma.user.findFirst({
+    where: { id, orgId: user.orgId },
+  })
+  if (!targetUser) throw new Error("User not found")
 
   const existing = await prisma.user.findUnique({
     where: { email: data.email },
@@ -142,11 +139,17 @@ export async function updateUser(
 }
 
 export async function archiveUser(id: string) {
-  const session = await requireAdmin()
+  const { user } = await requireAdmin()
 
-  if (id === session.user.id) {
+  if (id === user.id) {
     throw new Error("You cannot archive yourself")
   }
+
+  // Verify user belongs to org
+  const targetUser = await prisma.user.findFirst({
+    where: { id, orgId: user.orgId },
+  })
+  if (!targetUser) throw new Error("User not found")
 
   await prisma.user.update({
     where: { id },
@@ -157,7 +160,13 @@ export async function archiveUser(id: string) {
 }
 
 export async function restoreUser(id: string) {
-  await requireAdmin()
+  const { user } = await requireAdmin()
+
+  // Verify user belongs to org
+  const targetUser = await prisma.user.findFirst({
+    where: { id, orgId: user.orgId },
+  })
+  if (!targetUser) throw new Error("User not found")
 
   await prisma.user.update({
     where: { id },
@@ -170,22 +179,24 @@ export async function restoreUser(id: string) {
 export async function resetUserPassword(
   id: string
 ): Promise<{ tempPassword?: string; emailSent?: boolean }> {
-  await requireAdmin()
+  const { user } = await requireAdmin()
+
+  // Verify user belongs to org
+  const targetUser = await prisma.user.findFirst({
+    where: { id, orgId: user.orgId },
+    select: { id: true, name: true, email: true },
+  })
+  if (!targetUser) throw new Error("User not found")
 
   if (isEmailConfigured()) {
-    const user = await prisma.user.findUniqueOrThrow({
-      where: { id },
-      select: { id: true, name: true, email: true },
-    })
-
-    const rawToken = await createToken(user.id, "PASSWORD_RESET")
+    const rawToken = await createToken(targetUser.id, "PASSWORD_RESET")
     const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000"
     const resetUrl = `${baseUrl}/set-password?token=${rawToken}&type=reset`
 
     await sendEmail({
-      to: user.email,
+      to: targetUser.email,
       subject: "Reset your Punch password",
-      react: ResetEmail({ name: user.name, resetUrl }),
+      react: ResetEmail({ name: targetUser.name, resetUrl }),
     })
 
     return { emailSent: true }

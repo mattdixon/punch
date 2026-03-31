@@ -8,6 +8,30 @@ datasource db {
 }
 
 // ============================================
+// ORGANIZATION (multi-tenancy)
+// ============================================
+
+model Organization {
+  id                   String    @id @default(cuid())
+  companyName          String
+  slug                 String    @unique
+  logoBase64           String?
+  defaultPaymentTerms  String    @default("Net 15")
+  defaultBillCents     Int       @default(0)
+  defaultPayCents      Int       @default(0)
+  defaultCurrency      String    @default("USD")
+  fiscalYearStartMonth Int       @default(1)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  users                User[]
+  clients              Client[]
+  projects             Project[]
+
+  @@index([createdAt])
+}
+
+// ============================================
 // USERS
 // ============================================
 
@@ -18,10 +42,12 @@ model User {
   name            String
   role            Role      @default(MEMBER)
   defaultPayCents Int       @default(0)
+  orgId           String
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
+  organization    Organization @relation(fields: [orgId], references: [id])
   assignments     ProjectAssignment[]
   timeEntries     TimeEntry[]         @relation("UserTimeEntries")
   timecards       Timecard[]
@@ -33,10 +59,12 @@ model User {
   tokens          Token[]
 
   @@index([email])
+  @@index([orgId])
   @@index([archivedAt])
 }
 
 enum Role {
+  OWNER
   ADMIN
   MEMBER
 }
@@ -48,12 +76,15 @@ enum Role {
 model Client {
   id          String    @id @default(cuid())
   name        String
+  orgId       String
   archivedAt  DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  projects    Project[]
+  organization Organization @relation(fields: [orgId], references: [id])
+  projects     Project[]
 
+  @@index([orgId])
   @@index([archivedAt])
 }
 
@@ -61,16 +92,19 @@ model Project {
   id               String    @id @default(cuid())
   name             String
   clientId         String
+  orgId            String
   defaultBillCents Int       @default(0)
   paymentTerms     String    @default("Net 30")
   archivedAt       DateTime?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
+  organization     Organization        @relation(fields: [orgId], references: [id])
   client           Client              @relation(fields: [clientId], references: [id])
   assignments      ProjectAssignment[]
   timeEntries      TimeEntry[]
 
+  @@index([orgId])
   @@index([clientId])
   @@index([archivedAt])
 }
@@ -158,10 +192,6 @@ enum TimecardStatus {
 }
 
 // ============================================
-// COMPANY SETTINGS (singleton)
-// ============================================
-
-// ============================================
 // TOKENS (invite + password reset)
 // ============================================
 
@@ -182,21 +212,4 @@ model Token {
 
   @@index([userId])
   @@index([expiresAt])
-}
-
-// ============================================
-// COMPANY SETTINGS (singleton)
-// ============================================
-
-model CompanySettings {
-  id                   String   @id @default("default")
-  companyName          String   @default("Punch")
-  logoBase64           String?
-  defaultPaymentTerms  String   @default("Net 15")
-  defaultBillCents     Int      @default(0)
-  defaultPayCents      Int      @default(0)
-  defaultCurrency      String   @default("USD")
-  fiscalYearStartMonth Int      @default(1)
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
 }

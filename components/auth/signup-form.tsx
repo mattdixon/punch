@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -14,9 +13,12 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { signUp } from "@/app/actions/signup"
 
-export function LoginForm() {
+export function SignupForm() {
   const router = useRouter()
+  const [orgName, setOrgName] = useState("")
+  const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
@@ -28,20 +30,10 @@ export function LoginForm() {
     setLoading(true)
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (result?.error) {
-        setError("Invalid email or password")
-      } else {
-        router.push("/timesheet")
-        router.refresh()
-      }
-    } catch {
-      setError("Something went wrong. Please try again.")
+      await signUp({ orgName, name, email, password })
+      router.push("/login?registered=1")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -51,7 +43,7 @@ export function LoginForm() {
     <Card className="w-full max-w-sm">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Punch</CardTitle>
-        <CardDescription>Sign in to your account</CardDescription>
+        <CardDescription>Create a new account</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -60,6 +52,30 @@ export function LoginForm() {
               {error}
             </div>
           )}
+          <div className="space-y-2">
+            <Label htmlFor="orgName">Organization Name</Label>
+            <Input
+              id="orgName"
+              type="text"
+              placeholder="Acme Agency"
+              value={orgName}
+              onChange={(e) => setOrgName(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="name">Your Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Jane Smith"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              disabled={loading}
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -77,27 +93,21 @@ export function LoginForm() {
             <Input
               id="password"
               type="password"
+              placeholder="At least 8 characters"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              minLength={8}
               disabled={loading}
             />
           </div>
-          <div className="flex justify-end">
-            <Link
-              href="/forgot-password"
-              className="text-sm text-muted-foreground hover:underline"
-            >
-              Forgot password?
-            </Link>
-          </div>
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Creating account..." : "Create Account"}
           </Button>
           <p className="text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link href="/signup" className="text-foreground hover:underline">
-              Create an account
+            Already have an account?{" "}
+            <Link href="/login" className="text-foreground hover:underline">
+              Sign in
             </Link>
           </p>
         </form>

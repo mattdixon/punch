@@ -30,7 +30,7 @@ type User = {
   id: string
   name: string
   email: string
-  role: "ADMIN" | "MEMBER"
+  role: "OWNER" | "ADMIN" | "MEMBER"
   defaultPayCents: number
   archivedAt: Date | null
   createdAt: Date
@@ -132,7 +132,7 @@ export function UserTable({
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant={user.role === "ADMIN" ? "default" : "secondary"}>
+                    <Badge variant={user.role === "ADMIN" || user.role === "OWNER" ? "default" : "secondary"}>
                       {user.role}
                     </Badge>
                   </TableCell>

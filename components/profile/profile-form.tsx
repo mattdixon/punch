@@ -66,7 +66,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
           <div className="space-y-2">
             <Label>Role</Label>
             <div>
-              <Badge variant={profile.role === "ADMIN" ? "default" : "secondary"}>
+              <Badge variant={profile.role === "ADMIN" || profile.role === "OWNER" ? "default" : "secondary"}>
                 {profile.role}
               </Badge>
             </div>
