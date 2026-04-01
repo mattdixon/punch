@@ -201,15 +201,15 @@ export function AdminUserDetail({ user }: { user: UserDetail }) {
       </div>
 
       {tempPassword && (
-        <Card className="border-orange-200 bg-orange-50">
+        <Card className="border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/30">
           <CardContent className="pt-4">
-            <p className="text-sm font-medium text-orange-800">
+            <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
               Temporary password:{" "}
-              <code className="rounded bg-orange-100 px-2 py-1 font-mono text-sm">
+              <code className="rounded bg-orange-100 dark:bg-orange-900/50 px-2 py-1 font-mono text-sm">
                 {tempPassword}
               </code>
             </p>
-            <p className="mt-1 text-xs text-orange-600">
+            <p className="mt-1 text-xs text-orange-600 dark:text-orange-400">
               Share this securely with the user. They should change it on first login.
             </p>
           </CardContent>

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { LogOut } from "lucide-react"
+import { ThemeToggle } from "@/components/layout/theme-toggle"
 
 interface AdminHeaderProps {
   user: {
@@ -34,6 +35,8 @@ export function AdminHeader({ user }: AdminHeaderProps) {
       <Badge variant="destructive" className="text-xs">
         SUPER ADMIN
       </Badge>
+      <div className="flex items-center gap-2">
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2">
@@ -63,6 +66,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      </div>
     </header>
   )
 }

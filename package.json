@@ -6,7 +6,8 @@
   "scripts": {
     "punch": "docker compose up -d && next dev --turbopack",
     "dev": "next dev --turbopack",
-    "build": "prisma generate && prisma migrate deploy && next build",
+    "build": "prisma generate && next build",
+    "db:migrate": "prisma migrate deploy",
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
