@@ -32,7 +32,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog"
 import { ArrowLeft, Building2, Users, FolderOpen, Briefcase, LogIn } from "lucide-react"
-import { updateOrganizationStatus, updateOrganization } from "@/app/actions/admin/tenants"
+import { updateOrganizationStatus, updateOrganization, updateTrialEndDate } from "@/app/actions/admin/tenants"
 import { startImpersonation } from "@/app/actions/admin/impersonation"
 import { toast } from "sonner"
 import Link from "next/link"
@@ -46,6 +46,7 @@ type OrgDetail = {
   defaultBillCents: number
   defaultPayCents: number
   defaultCurrency: string
+  trialEndsAt: string | null
   createdAt: string
   updatedAt: string
   clientCount: number
@@ -82,6 +83,7 @@ export function TenantDetail({ org }: { org: OrgDetail }) {
   const [loading, setLoading] = useState(false)
   const [editName, setEditName] = useState(org.companyName)
   const [editOpen, setEditOpen] = useState(false)
+  const [trialDate, setTrialDate] = useState(org.trialEndsAt?.split("T")[0] ?? "")
 
   async function handleStatusChange(status: "ACTIVE" | "SUSPENDED" | "DELETED") {
     setLoading(true)
@@ -93,6 +95,16 @@ export function TenantDetail({ org }: { org: OrgDetail }) {
       toast.error(err instanceof Error ? err.message : "Failed to update status")
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleUpdateTrial(newDate: string | null) {
+    try {
+      await updateTrialEndDate(org.id, newDate)
+      toast.success(newDate ? "Trial date updated" : "Trial removed")
+      router.refresh()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update trial")
     }
   }
 
@@ -249,6 +261,51 @@ export function TenantDetail({ org }: { org: OrgDetail }) {
               <dd className="font-medium">{formatCurrency(org.defaultBillCents)}</dd>
             </div>
           </dl>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Trial</CardTitle>
+          <CardDescription>
+            {org.trialEndsAt
+              ? new Date(org.trialEndsAt) > new Date()
+                ? `Trial active until ${new Date(org.trialEndsAt).toLocaleDateString()}`
+                : `Trial expired on ${new Date(org.trialEndsAt).toLocaleDateString()}`
+              : "No trial restriction"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-end gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="trialDate" className="text-sm">Trial End Date</Label>
+              <Input
+                id="trialDate"
+                type="date"
+                value={trialDate}
+                onChange={(e) => setTrialDate(e.target.value)}
+                className="w-48"
+              />
+            </div>
+            <Button
+              size="sm"
+              onClick={() => handleUpdateTrial(trialDate || null)}
+            >
+              {trialDate ? "Set Date" : "Remove Trial"}
+            </Button>
+            {org.trialEndsAt && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setTrialDate("")
+                  handleUpdateTrial(null)
+                }}
+              >
+                Remove Trial
+              </Button>
+            )}
+          </div>
         </CardContent>
       </Card>
 

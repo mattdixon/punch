@@ -75,6 +75,7 @@ export async function getOrganizationDetail(orgId: string) {
     defaultBillCents: org.defaultBillCents,
     defaultPayCents: org.defaultPayCents,
     defaultCurrency: org.defaultCurrency,
+    trialEndsAt: org.trialEndsAt?.toISOString() ?? null,
     createdAt: org.createdAt.toISOString(),
     updatedAt: org.updatedAt.toISOString(),
     clientCount: org._count.clients,
@@ -140,6 +141,31 @@ export async function updateOrganization(
   await logAdminAction(user.id, "UPDATE_ORG", "Organization", orgId, {
     orgName: data.companyName.trim(),
     previousName: org.companyName,
+  })
+
+  revalidatePath("/admin/tenants")
+  revalidatePath(`/admin/tenants/${orgId}`)
+}
+
+export async function updateTrialEndDate(
+  orgId: string,
+  trialEndsAt: string | null
+) {
+  const { user } = await requireSuperAdmin()
+
+  const org = await prisma.organization.findUnique({ where: { id: orgId } })
+  if (!org) {
+    throw new Error("Organization not found")
+  }
+
+  await prisma.organization.update({
+    where: { id: orgId },
+    data: { trialEndsAt: trialEndsAt ? new Date(trialEndsAt) : null },
+  })
+
+  await logAdminAction(user.id, "UPDATE_TRIAL", "Organization", orgId, {
+    orgName: org.companyName,
+    trialEndsAt: trialEndsAt ?? "removed",
   })
 
   revalidatePath("/admin/tenants")

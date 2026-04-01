@@ -1,6 +1,6 @@
 "use server"
 
-import { requireAdmin } from "@/app/actions/_auth-helpers"
+import { requireAdmin, requireAdminWriteAccess } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcryptjs"
 import { revalidatePath } from "next/cache"
@@ -43,7 +43,7 @@ export async function createUser(data: {
   role: "OWNER" | "ADMIN" | "MEMBER"
   defaultPayCents: number
 }): Promise<{ tempPassword?: string; emailSent?: boolean }> {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   const existing = await prisma.user.findUnique({
     where: { email: data.email },
@@ -110,7 +110,7 @@ export async function updateUser(
     defaultPayCents: number
   }
 ) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   // Verify user belongs to org
   const targetUser = await prisma.user.findFirst({

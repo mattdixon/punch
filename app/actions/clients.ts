@@ -1,6 +1,6 @@
 "use server"
 
-import { requireAdmin } from "@/app/actions/_auth-helpers"
+import { requireAdmin, requireAdminWriteAccess } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
@@ -17,7 +17,7 @@ export async function getClients(showArchived: boolean = false) {
 }
 
 export async function createClient(data: { name: string }) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   if (!data.name.trim()) {
     throw new Error("Client name is required")
@@ -31,7 +31,7 @@ export async function createClient(data: { name: string }) {
 }
 
 export async function updateClient(id: string, data: { name: string }) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   if (!data.name.trim()) {
     throw new Error("Client name is required")

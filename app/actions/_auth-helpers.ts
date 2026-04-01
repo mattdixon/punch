@@ -1,6 +1,8 @@
 "use server"
 
 import { auth } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
+import { isTrialExpired } from "@/lib/trial"
 
 type AuthUser = {
   id: string
@@ -74,6 +76,25 @@ export async function requireAdmin(): Promise<OrgAuthResult> {
   return result
 }
 
+/**
+ * Requires admin role AND checks that the org's trial is not expired.
+ * Use for admin create/update/delete operations.
+ */
+export async function requireAdminWriteAccess(): Promise<OrgAuthResult> {
+  const result = await requireAdmin()
+
+  const org = await prisma.organization.findUnique({
+    where: { id: result.user.orgId },
+    select: { trialEndsAt: true },
+  })
+
+  if (org && isTrialExpired(org)) {
+    throw new Error("Your trial has expired. Upgrade to continue editing.")
+  }
+
+  return result
+}
+
 export async function requireOwner(): Promise<OrgAuthResult> {
   const result = await requireOrgAuth()
   if (result.user.role !== "OWNER") {
@@ -91,5 +112,24 @@ export async function requireSuperAdmin(): Promise<AuthResult> {
   if (!result.user.isSuperAdmin) {
     throw new Error("Forbidden")
   }
+  return result
+}
+
+/**
+ * Requires org auth AND checks that the org's trial is not expired.
+ * Use this for all create/update/delete operations.
+ */
+export async function requireWriteAccess(): Promise<OrgAuthResult> {
+  const result = await requireOrgAuth()
+
+  const org = await prisma.organization.findUnique({
+    where: { id: result.user.orgId },
+    select: { trialEndsAt: true },
+  })
+
+  if (org && isTrialExpired(org)) {
+    throw new Error("Your trial has expired. Upgrade to continue editing.")
+  }
+
   return result
 }
