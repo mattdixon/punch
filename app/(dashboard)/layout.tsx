@@ -7,6 +7,7 @@ import { TrialBanner } from "@/components/layout/trial-banner"
 import { getCompanySettings } from "@/app/actions/settings"
 import { prisma } from "@/lib/prisma"
 import { getTrialDaysRemaining, isTrialExpired } from "@/lib/trial"
+import { isStripeEnabled } from "@/lib/stripe"
 
 export default async function DashboardLayout({
   children,
@@ -43,12 +44,12 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen">
-      <Sidebar user={session.user} companyName={settings.companyName} logoBase64={settings.logoBase64} />
+      <Sidebar user={session.user} companyName={settings.companyName} logoBase64={settings.logoBase64} showBilling={isStripeEnabled()} />
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         {isImpersonating && (
           <ImpersonationBanner userName={session.user.name ?? "Unknown"} />
         )}
-        <TrialBanner daysRemaining={daysRemaining} isExpired={trialExpired} />
+        <TrialBanner daysRemaining={daysRemaining} isExpired={trialExpired} isStripeEnabled={isStripeEnabled()} />
         <Header user={session.user} />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-muted/40">
           {children}

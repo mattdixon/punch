@@ -19,6 +19,7 @@ import {
   PanelLeft,
   Menu,
   Shield,
+  CreditCard,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -86,6 +87,7 @@ interface SidebarProps {
   }
   companyName?: string
   logoBase64?: string | null
+  showBilling?: boolean
 }
 
 function NavLink({
@@ -176,6 +178,7 @@ function SidebarContent({
   user,
   companyName,
   logoBase64,
+  showBilling,
   collapsed,
   onToggle,
   onNavigate,
@@ -266,7 +269,17 @@ function SidebarContent({
             href="/settings"
             label="Settings"
             icon={Settings}
-            isActive={pathname.startsWith("/settings")}
+            isActive={pathname === "/settings"}
+            collapsed={collapsed}
+            onClick={onNavigate}
+          />
+        )}
+        {user.role === "OWNER" && showBilling && (
+          <FooterLink
+            href="/settings/billing"
+            label="Billing"
+            icon={CreditCard}
+            isActive={pathname.startsWith("/settings/billing")}
             collapsed={collapsed}
             onClick={onNavigate}
           />

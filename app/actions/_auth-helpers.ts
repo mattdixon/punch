@@ -3,6 +3,34 @@
 import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { isTrialExpired } from "@/lib/trial"
+import { isStripeEnabled } from "@/lib/stripe"
+
+/**
+ * Check if an org has write access based on trial and subscription status.
+ * Write access is granted if:
+ * - Trial is not expired, OR
+ * - Org has an active Stripe subscription, OR
+ * - Stripe is not enabled (self-hosted mode)
+ */
+async function checkWriteAccess(orgId: string): Promise<void> {
+  const org = await prisma.organization.findUnique({
+    where: { id: orgId },
+    select: { trialEndsAt: true, subscriptionStatus: true },
+  })
+
+  if (!org) return
+
+  // If Stripe isn't configured, allow all writes (self-hosted)
+  if (!isStripeEnabled()) return
+
+  // If subscription is active, always allow
+  if (org.subscriptionStatus === "active" || org.subscriptionStatus === "trialing") return
+
+  // If trial is not expired (or no trial set), allow
+  if (!isTrialExpired(org)) return
+
+  throw new Error("Your trial has expired. Upgrade to continue editing.")
+}
 
 type AuthUser = {
   id: string
@@ -77,21 +105,11 @@ export async function requireAdmin(): Promise<OrgAuthResult> {
 }
 
 /**
- * Requires admin role AND checks that the org's trial is not expired.
- * Use for admin create/update/delete operations.
+ * Requires admin role AND checks write access (trial + subscription).
  */
 export async function requireAdminWriteAccess(): Promise<OrgAuthResult> {
   const result = await requireAdmin()
-
-  const org = await prisma.organization.findUnique({
-    where: { id: result.user.orgId },
-    select: { trialEndsAt: true },
-  })
-
-  if (org && isTrialExpired(org)) {
-    throw new Error("Your trial has expired. Upgrade to continue editing.")
-  }
-
+  await checkWriteAccess(result.user.orgId)
   return result
 }
 
@@ -116,20 +134,11 @@ export async function requireSuperAdmin(): Promise<AuthResult> {
 }
 
 /**
- * Requires org auth AND checks that the org's trial is not expired.
+ * Requires org auth AND checks write access (trial + subscription).
  * Use this for all create/update/delete operations.
  */
 export async function requireWriteAccess(): Promise<OrgAuthResult> {
   const result = await requireOrgAuth()
-
-  const org = await prisma.organization.findUnique({
-    where: { id: result.user.orgId },
-    select: { trialEndsAt: true },
-  })
-
-  if (org && isTrialExpired(org)) {
-    throw new Error("Your trial has expired. Upgrade to continue editing.")
-  }
-
+  await checkWriteAccess(result.user.orgId)
   return result
 }
