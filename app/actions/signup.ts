@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { hash } from "bcryptjs"
+import { createTrialEndDate } from "@/lib/trial"
 
 function slugify(text: string): string {
   return text
@@ -66,6 +67,7 @@ export async function signUp(data: {
       data: {
         companyName: orgName.trim(),
         slug,
+        trialEndsAt: createTrialEndDate(),
       },
     })
 

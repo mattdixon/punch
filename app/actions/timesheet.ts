@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { getWeekString } from "@/lib/utils"
+import { requireWriteAccess } from "@/app/actions/_auth-helpers"
 
 async function requireAuth() {
   const session = await auth()
@@ -79,6 +80,7 @@ export async function saveTimeEntry(data: {
   hours: number
   notes?: string | null
 }) {
+  await requireWriteAccess()
   const session = await requireAuth()
   const userId = session.user.id
   // Parse date as local to avoid timezone shift (e.g. "2026-02-23" → Feb 23 local, not Feb 22 UTC-7)
@@ -130,6 +132,7 @@ export async function saveTimeEntry(data: {
 }
 
 export async function submitTimecard(week: string) {
+  await requireWriteAccess()
   const session = await requireAuth()
   const userId = session.user.id
 

@@ -1,6 +1,6 @@
 "use server"
 
-import { requireAdmin } from "@/app/actions/_auth-helpers"
+import { requireAdmin, requireAdminWriteAccess } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
@@ -33,7 +33,7 @@ export async function createProject(data: {
   defaultBillCents: number
   paymentTerms: string
 }) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   if (!data.name.trim()) {
     throw new Error("Project name is required")
@@ -61,7 +61,7 @@ export async function updateProject(
     paymentTerms: string
   }
 ) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   if (!data.name.trim()) {
     throw new Error("Project name is required")

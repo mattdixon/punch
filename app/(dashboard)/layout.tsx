@@ -3,7 +3,10 @@ import { redirect } from "next/navigation"
 import { Sidebar } from "@/components/layout/sidebar"
 import { Header } from "@/components/layout/header"
 import { ImpersonationBanner } from "@/components/layout/impersonation-banner"
+import { TrialBanner } from "@/components/layout/trial-banner"
 import { getCompanySettings } from "@/app/actions/settings"
+import { prisma } from "@/lib/prisma"
+import { getTrialDaysRemaining, isTrialExpired } from "@/lib/trial"
 
 export default async function DashboardLayout({
   children,
@@ -30,6 +33,14 @@ export default async function DashboardLayout({
 
   const settings = await getCompanySettings()
 
+  // Get trial status
+  const org = await prisma.organization.findUnique({
+    where: { id: session.user.orgId! },
+    select: { trialEndsAt: true },
+  })
+  const daysRemaining = org ? getTrialDaysRemaining(org) : null
+  const trialExpired = org ? isTrialExpired(org) : false
+
   return (
     <div className="flex h-screen">
       <Sidebar user={session.user} companyName={settings.companyName} logoBase64={settings.logoBase64} />
@@ -37,6 +48,7 @@ export default async function DashboardLayout({
         {isImpersonating && (
           <ImpersonationBanner userName={session.user.name ?? "Unknown"} />
         )}
+        <TrialBanner daysRemaining={daysRemaining} isExpired={trialExpired} />
         <Header user={session.user} />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6 bg-muted/40">
           {children}

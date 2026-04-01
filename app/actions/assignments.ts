@@ -1,6 +1,6 @@
 "use server"
 
-import { requireAdmin } from "@/app/actions/_auth-helpers"
+import { requireAdmin, requireAdminWriteAccess } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 
@@ -49,7 +49,7 @@ export async function createAssignment(data: {
   payRateCents: number | null
   billRateCents: number | null
 }) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   // Verify project belongs to org
   const project = await prisma.project.findFirst({
@@ -82,7 +82,7 @@ export async function updateAssignment(
     billRateCents: number | null
   }
 ) {
-  const { user } = await requireAdmin()
+  const { user } = await requireAdminWriteAccess()
 
   // Verify assignment belongs to org via project
   const assignment = await prisma.projectAssignment.findFirst({
