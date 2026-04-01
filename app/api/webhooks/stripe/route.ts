@@ -34,7 +34,7 @@ export async function POST(request: Request) {
         session.subscription as string
       )
       const priceId = subscription.items.data[0]?.price.id
-      const plan = priceId ? getPlanByPriceId(priceId) : undefined
+      const plan = priceId ? await getPlanByPriceId(priceId) : undefined
 
       await prisma.organization.update({
         where: { id: orgId },
@@ -54,7 +54,7 @@ export async function POST(request: Request) {
     case "customer.subscription.updated": {
       const subscription = event.data.object as Stripe.Subscription
       const priceId = subscription.items.data[0]?.price.id
-      const plan = priceId ? getPlanByPriceId(priceId) : undefined
+      const plan = priceId ? await getPlanByPriceId(priceId) : undefined
 
       const org = await prisma.organization.findFirst({
         where: { stripeSubscriptionId: subscription.id },

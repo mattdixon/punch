@@ -56,13 +56,35 @@ The app will be available at **http://localhost:3000**.
 | Global Admin | admin@punch.local | password123 |
 | Member | member@punch.local | password123 |
 
+## Stripe (Optional)
+
+Billing features are hidden unless Stripe is configured. To enable locally:
+
+1. Add your keys to `.env`:
+   ```
+   STRIPE_SECRET_KEY="sk_test_..."
+   STRIPE_WEBHOOK_SECRET="whsec_..."
+   ```
+
+2. Run the webhook listener in a separate terminal:
+   ```bash
+   npm run stripe:listen
+   ```
+   Copy the `whsec_` signing secret it prints into your `.env`.
+
+3. Start the dev server as usual (`npm run punch`).
+
+In production, add your webhook endpoint URL in the [Stripe Dashboard](https://dashboard.stripe.com/webhooks) pointing to `https://your-domain.com/api/webhooks/stripe`.
+
 ## Other Commands
 
 ```bash
-npm run dev       # Dev server only (database must already be running)
-npm run build     # Production build
-npm start         # Production server
-npx prisma studio # Browse database in the browser
+npm run dev            # Dev server only (database must already be running)
+npm run build          # Production build
+npm start              # Production server
+npm run db:migrate     # Apply database migrations
+npm run stripe:listen  # Forward Stripe webhooks to localhost
+npx prisma studio      # Browse database in the browser
 ```
 
 ## Documentation

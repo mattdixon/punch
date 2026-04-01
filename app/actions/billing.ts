@@ -3,7 +3,7 @@
 import { requireOrgAuth } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { stripe, isStripeEnabled } from "@/lib/stripe"
-import { PLANS } from "@/lib/plans"
+import { PLAN_DEFINITIONS, getOrCreateStripePriceId } from "@/lib/plans"
 
 export async function getBillingStatus() {
   const { user } = await requireOrgAuth()
@@ -30,7 +30,7 @@ export async function getBillingStatus() {
   }
 }
 
-export async function createCheckoutSession(priceId: string) {
+export async function createCheckoutSession(planName: string) {
   const { user } = await requireOrgAuth()
 
   if (!stripe) {
@@ -39,6 +39,11 @@ export async function createCheckoutSession(priceId: string) {
 
   if (user.role !== "OWNER") {
     throw new Error("Only the organization owner can manage billing")
+  }
+
+  const priceId = await getOrCreateStripePriceId(planName)
+  if (!priceId) {
+    throw new Error("Invalid plan")
   }
 
   const org = await prisma.organization.findUnique({
@@ -106,10 +111,10 @@ export async function createBillingPortalSession() {
 }
 
 export async function getPlans() {
-  return PLANS.map((p) => ({
+  return PLAN_DEFINITIONS.map((p) => ({
     name: p.name,
-    priceId: p.priceId,
-    monthlyPrice: p.monthlyPrice,
+    amountCents: p.amountCents,
+    monthlyPrice: p.amountCents / 100,
     userLimit: p.userLimit,
     features: p.features,
   }))
