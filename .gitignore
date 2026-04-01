@@ -141,6 +141,9 @@ vite.config.ts.timestamp-*
 # Claude Code (local/personal settings only)
 .claude/settings.local.json
 
+# Babysitter
+.a5c/
+
 # === Punch-specific additions ===
 
 # Prisma
