@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { LogOut } from "lucide-react"
+import { ThemeToggle } from "@/components/layout/theme-toggle"
 
 interface HeaderProps {
   user: {
@@ -31,7 +32,8 @@ export function Header({ user }: HeaderProps) {
       .toUpperCase() ?? "?"
 
   return (
-    <header className="flex h-14 items-center justify-end border-b bg-background px-4 pl-12 lg:pl-6 lg:px-6">
+    <header className="flex h-14 items-center justify-end gap-2 border-b bg-background px-4 pl-12 lg:pl-6 lg:px-6">
+      <ThemeToggle />
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="flex items-center gap-2">
