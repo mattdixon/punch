@@ -53,7 +53,7 @@ The app will be available at **http://localhost:3000**.
 
 | Account | Email | Password |
 |---------|-------|----------|
-| Admin | admin@punch.local | password123 |
+| Global Admin | admin@punch.local | password123 |
 | Member | member@punch.local | password123 |
 
 ## Other Commands

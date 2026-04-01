@@ -18,6 +18,7 @@ import {
   PanelLeftClose,
   PanelLeft,
   Menu,
+  Shield,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -81,6 +82,7 @@ interface SidebarProps {
   user: {
     name?: string | null
     role: string
+    isSuperAdmin?: boolean
   }
   companyName?: string
   logoBase64?: string | null
@@ -265,6 +267,16 @@ function SidebarContent({
             label="Settings"
             icon={Settings}
             isActive={pathname.startsWith("/settings")}
+            collapsed={collapsed}
+            onClick={onNavigate}
+          />
+        )}
+        {user.isSuperAdmin && (
+          <FooterLink
+            href="/admin"
+            label="Admin Console"
+            icon={Shield}
+            isActive={false}
             collapsed={collapsed}
             onClick={onNavigate}
           />

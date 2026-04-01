@@ -1,11 +1,11 @@
 "use server"
 
-import { requireAuth, requireAdmin } from "@/app/actions/_auth-helpers"
+import { requireOrgAuth, requireAdmin } from "@/app/actions/_auth-helpers"
 import { prisma } from "@/lib/prisma"
 import { getWeekString } from "@/lib/utils"
 
 export async function getMemberDashboard() {
-  const { user } = await requireAuth()
+  const { user } = await requireOrgAuth()
   const userId = user.id
   const week = getWeekString(new Date())
 

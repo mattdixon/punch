@@ -21,6 +21,7 @@ model Organization {
   defaultPayCents      Int       @default(0)
   defaultCurrency      String    @default("USD")
   fiscalYearStartMonth Int       @default(1)
+  status               OrgStatus @default(ACTIVE)
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
@@ -29,6 +30,13 @@ model Organization {
   projects             Project[]
 
   @@index([createdAt])
+  @@index([status])
+}
+
+enum OrgStatus {
+  ACTIVE
+  SUSPENDED
+  DELETED
 }
 
 // ============================================
@@ -41,13 +49,14 @@ model User {
   passwordHash    String?
   name            String
   role            Role      @default(MEMBER)
+  isSuperAdmin    Boolean   @default(false)
   defaultPayCents Int       @default(0)
-  orgId           String
+  orgId           String?
   archivedAt      DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  organization    Organization @relation(fields: [orgId], references: [id])
+  organization    Organization? @relation(fields: [orgId], references: [id])
   assignments     ProjectAssignment[]
   timeEntries     TimeEntry[]         @relation("UserTimeEntries")
   timecards       Timecard[]
@@ -57,6 +66,7 @@ model User {
   approvedCards   Timecard[]          @relation("ApprovedByUser")
   invoicedCards   Timecard[]          @relation("InvoicedByUser")
   tokens          Token[]
+  auditLogs       AdminAuditLog[]
 
   @@index([email])
   @@index([orgId])
@@ -212,4 +222,24 @@ model Token {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+// ============================================
+// ADMIN AUDIT LOG (super admin actions)
+// ============================================
+
+model AdminAuditLog {
+  id          String   @id @default(cuid())
+  adminUserId String
+  action      String
+  targetType  String
+  targetId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
+
+  adminUser   User     @relation(fields: [adminUserId], references: [id])
+
+  @@index([adminUserId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
