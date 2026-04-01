@@ -10,7 +10,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { Clock, CheckSquare, Download, ArrowRight } from "lucide-react"
+import { Clock, CheckSquare, Download, ArrowRight, Users } from "lucide-react"
 
 const statusConfig: Record<
   string,
@@ -43,14 +43,19 @@ export default async function DashboardPage() {
   if (!session?.user) redirect("/login")
 
   const isAdmin = session.user.role === "ADMIN" || session.user.role === "OWNER"
+  const firstName = session.user.name?.split(" ")[0] ?? "there"
 
   if (isAdmin) {
     const data = await getAdminDashboard()
     return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-2xl font-bold">Welcome back, {firstName}</h1>
+          <p className="text-muted-foreground mt-1">Here&apos;s what&apos;s happening this week.</p>
+        </div>
+
         <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+          <Card className="border-l-4 border-l-primary">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Pending Approvals
@@ -59,7 +64,7 @@ export default async function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{data.pendingCount}</div>
-              <Button variant="link" className="px-0 mt-1" asChild>
+              <Button variant="link" className="px-0 mt-1 text-primary" asChild>
                 <Link href="/approvals">
                   Review timecards <ArrowRight className="ml-1 h-4 w-4" />
                 </Link>
@@ -72,18 +77,16 @@ export default async function DashboardPage() {
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Team Hours This Week
               </CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{data.totalHours}</div>
-              <p className="text-sm text-muted-foreground mt-1">
-                {data.week}
-              </p>
+              <p className="text-sm text-muted-foreground mt-1">{data.week}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
                 Quick Actions
               </CardTitle>
@@ -119,13 +122,17 @@ export default async function DashboardPage() {
   const config = statusConfig[data.status] ?? statusConfig.OPEN
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold">Welcome back, {firstName}</h1>
+        <p className="text-muted-foreground mt-1">Here&apos;s your week at a glance.</p>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="border-l-4 border-l-primary">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">
-              This Week
+              Hours This Week
             </CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -145,7 +152,7 @@ export default async function DashboardPage() {
             <Badge variant={config.variant} className={config.className}>
               {config.label}
             </Badge>
-            <Button variant="link" className="px-0 mt-3 block" asChild>
+            <Button variant="link" className="px-0 mt-3 block text-primary" asChild>
               <Link href="/timesheet">
                 Go to timesheet <ArrowRight className="ml-1 h-4 w-4 inline" />
               </Link>
@@ -153,6 +160,21 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {data.totalHours === 0 && (
+        <Card className="bg-muted/50">
+          <CardContent className="pt-6 text-center">
+            <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="font-medium">No time logged this week</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Head to your timesheet to start tracking hours.
+            </p>
+            <Button className="mt-4" asChild>
+              <Link href="/timesheet">Open Timesheet</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   )
 }
