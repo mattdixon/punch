@@ -10,7 +10,6 @@ import { toast } from "sonner"
 
 type Plan = {
   name: string
-  priceId: string | null
   monthlyPrice: number
   userLimit: number
   features: string[]
@@ -25,10 +24,10 @@ interface PricingTableProps {
 export function PricingTable({ plans, currentPlan, isOwner }: PricingTableProps) {
   const [loading, setLoading] = useState<string | null>(null)
 
-  async function handleChoosePlan(priceId: string) {
-    setLoading(priceId)
+  async function handleChoosePlan(planName: string) {
+    setLoading(planName)
     try {
-      const { url } = await createCheckoutSession(priceId)
+      const { url } = await createCheckoutSession(planName)
       if (url) {
         window.location.href = url
       }
@@ -44,6 +43,7 @@ export function PricingTable({ plans, currentPlan, isOwner }: PricingTableProps)
       {plans.map((plan) => {
         const isCurrent = plan.name === currentPlan
         const isPopular = plan.name === "Pro"
+        const isPaid = plan.monthlyPrice > 0
 
         return (
           <Card
@@ -83,18 +83,18 @@ export function PricingTable({ plans, currentPlan, isOwner }: PricingTableProps)
                 <Button className="w-full" variant="outline" disabled>
                   Current Plan
                 </Button>
-              ) : plan.priceId && isOwner ? (
+              ) : isPaid && isOwner ? (
                 <Button
                   className="w-full"
                   variant={isPopular ? "default" : "outline"}
                   disabled={loading !== null}
-                  onClick={() => handleChoosePlan(plan.priceId!)}
+                  onClick={() => handleChoosePlan(plan.name)}
                 >
-                  {loading === plan.priceId ? "Redirecting..." : `Choose ${plan.name}`}
+                  {loading === plan.name ? "Redirecting..." : `Choose ${plan.name}`}
                 </Button>
-              ) : !plan.priceId ? (
+              ) : !isPaid ? (
                 <Button className="w-full" variant="outline" disabled>
-                  {isCurrent ? "Current Plan" : "Free"}
+                  Free
                 </Button>
               ) : (
                 <Button className="w-full" variant="outline" disabled>

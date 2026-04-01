@@ -250,3 +250,17 @@ model AdminAuditLog {
   @@index([targetType, targetId])
   @@index([createdAt])
 }
+
+// ============================================
+// STRIPE PLANS (auto-created prices)
+// ============================================
+
+model StripePlan {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  stripePriceId   String   @unique
+  stripeProductId String
+  amountCents     Int
+  userLimit       Int
+  createdAt       DateTime @default(now())
+}

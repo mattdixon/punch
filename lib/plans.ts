@@ -1,16 +1,17 @@
-export type Plan = {
+import { prisma } from "@/lib/prisma"
+import { stripe } from "@/lib/stripe"
+
+export type PlanDefinition = {
   name: string
-  priceId: string | null
-  monthlyPrice: number // in dollars, for display
+  amountCents: number // monthly price in cents
   userLimit: number
   features: string[]
 }
 
-export const PLANS: Plan[] = [
+export const PLAN_DEFINITIONS: PlanDefinition[] = [
   {
     name: "Free",
-    priceId: null,
-    monthlyPrice: 0,
+    amountCents: 0,
     userLimit: 2,
     features: [
       "Up to 2 users",
@@ -21,8 +22,7 @@ export const PLANS: Plan[] = [
   },
   {
     name: "Pro",
-    priceId: process.env.STRIPE_PRO_PRICE_ID ?? null,
-    monthlyPrice: 29,
+    amountCents: 2900, // $29.00
     userLimit: 10,
     features: [
       "Up to 10 users",
@@ -34,8 +34,7 @@ export const PLANS: Plan[] = [
   },
   {
     name: "Business",
-    priceId: process.env.STRIPE_BUSINESS_PRICE_ID ?? null,
-    monthlyPrice: 79,
+    amountCents: 7900, // $79.00
     userLimit: 50,
     features: [
       "Up to 50 users",
@@ -46,10 +45,58 @@ export const PLANS: Plan[] = [
   },
 ]
 
-export function getPlanByPriceId(priceId: string): Plan | undefined {
-  return PLANS.find((p) => p.priceId === priceId)
+/**
+ * Get the Stripe price ID for a plan, creating the product/price in Stripe
+ * if it doesn't exist yet. Returns null for the Free plan.
+ */
+export async function getOrCreateStripePriceId(planName: string): Promise<string | null> {
+  const def = PLAN_DEFINITIONS.find((p) => p.name === planName)
+  if (!def || def.amountCents === 0 || !stripe) return null
+
+  // Check DB cache first
+  const existing = await prisma.stripePlan.findUnique({
+    where: { name: planName },
+  })
+  if (existing) return existing.stripePriceId
+
+  // Create in Stripe
+  const product = await stripe.products.create({
+    name: `Punch ${planName}`,
+    description: `Punch ${planName} plan — up to ${def.userLimit} users`,
+  })
+
+  const price = await stripe.prices.create({
+    product: product.id,
+    unit_amount: def.amountCents,
+    currency: "usd",
+    recurring: { interval: "month" },
+  })
+
+  // Cache in DB
+  await prisma.stripePlan.create({
+    data: {
+      name: planName,
+      stripePriceId: price.id,
+      stripeProductId: product.id,
+      amountCents: def.amountCents,
+      userLimit: def.userLimit,
+    },
+  })
+
+  return price.id
 }
 
-export function getPlanByName(name: string): Plan | undefined {
-  return PLANS.find((p) => p.name === name)
+/**
+ * Look up a plan by its Stripe price ID.
+ */
+export async function getPlanByPriceId(priceId: string): Promise<PlanDefinition | undefined> {
+  const stored = await prisma.stripePlan.findUnique({
+    where: { stripePriceId: priceId },
+  })
+  if (!stored) return undefined
+  return PLAN_DEFINITIONS.find((p) => p.name === stored.name)
+}
+
+export function getPlanByName(name: string): PlanDefinition | undefined {
+  return PLAN_DEFINITIONS.find((p) => p.name === name)
 }
