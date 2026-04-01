@@ -23,6 +23,12 @@ model Organization {
   fiscalYearStartMonth Int       @default(1)
   status               OrgStatus @default(ACTIVE)
   trialEndsAt          DateTime?
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  planName             String?
+  planUserLimit        Int?
+  subscriptionStatus   String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 

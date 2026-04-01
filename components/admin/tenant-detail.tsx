@@ -47,6 +47,9 @@ type OrgDetail = {
   defaultPayCents: number
   defaultCurrency: string
   trialEndsAt: string | null
+  planName: string
+  subscriptionStatus: string | null
+  stripeCustomerId: string | null
   createdAt: string
   updatedAt: string
   clientCount: number
@@ -308,6 +311,33 @@ export function TenantDetail({ org }: { org: OrgDetail }) {
           </div>
         </CardContent>
       </Card>
+
+      {(org.stripeCustomerId || org.subscriptionStatus) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Billing</CardTitle>
+            <CardDescription>Stripe subscription details</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <dt className="text-muted-foreground">Plan</dt>
+                <dd className="font-medium">{org.planName}</dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Status</dt>
+                <dd className="font-medium">{org.subscriptionStatus ?? "None"}</dd>
+              </div>
+              {org.stripeCustomerId && (
+                <div className="col-span-2">
+                  <dt className="text-muted-foreground">Stripe Customer</dt>
+                  <dd className="font-mono text-xs">{org.stripeCustomerId}</dd>
+                </div>
+              )}
+            </dl>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
